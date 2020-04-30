@@ -26,9 +26,9 @@ class MonteCarlo:
         return actions, reward
 
     # TODO: heuristic for resonable number of maxSteps in episode
-    def generateEpisode(self, state: State, policy: dict, maxSteps, exploringStarts) -> deque:
+    def generateEpisode(self, state: State, policy: dict, maxSteps, exploringStarts, onPolicy=True) -> deque:
         episode = deque() # deque allows much faster appending than array
-        if exploringStarts:
+        if exploringStarts and onPolicy:
             policy[state] = self.getRandomAction(state) # slow (clingo IO)
 
         count = 0
@@ -37,8 +37,11 @@ class MonteCarlo:
                 #print('Max steps exceeded')
                 episode.append((state, -100, None))
                 break
-                
-            actions, reward = policy.get(state)
+
+            if onPolicy:
+                actions, reward = policy.get(state)
+            else:
+                actions, reward = self.getRandomAction(state) # slow (clingo IO)
 
             if actions == None:
                 #print('Goal reached!')

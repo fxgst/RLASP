@@ -4,6 +4,8 @@ from entities import *
 import numpy as np
 
 class BlocksWorld:
+    # TODO: single knowledge base to not reset clingo each time
+    
     def __init__(self, blocks: set, goal: State):
         self.blocks = blocks
         self.clingo = ClingoBridge()
