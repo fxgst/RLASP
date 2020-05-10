@@ -1,36 +1,20 @@
 from BlocksWorld import *
 from MonteCarlo import *
-from entities import Block, SubGoal
+from entities import State, PartState
 
-a = Block('a')
-b = Block('b')
-c = Block('c')
-d = Block('d')
-e = Block('e')
-f = Block('f')
-g = Block('g')
-table = Block('table')
-
-#blocks = {a, b}
-blocks = {a, b, c}
-#blocks = {a, b, c, d, e}
-
-#goal = State({SubGoal(a, table), SubGoal(b, a)})
-goal = State({SubGoal(a, table), SubGoal(b, a), SubGoal(c, b)})
-#goal = State({SubGoal(a, table), SubGoal(b, a), SubGoal(c, b), SubGoal(d, c), SubGoal(e, d)})
-
-blocksWorld = BlocksWorld(blocks, goal)
+goal = State({PartState('a,table'), PartState('c,b'), PartState('b,a')})
+blocksWorld = BlocksWorld(['a', 'b', 'c'], goal)
 
 mc = MonteCarlo(blocksWorld)
-learnedPolicy = mc.learnPolicy(maxEpisodeLength=20, gamma=1, episodes=300) # {state : (action, reward)}
+learnedPolicy = mc.learnPolicy(maxEpisodeLength=10, gamma=1, episodes=256) # {state : action}
 print('Learned policy: %s' % learnedPolicy)
 print()
 
 # check whether goal can be reached from all start states
-def testPolicy(maxSteps=20):
+def testPolicy(maxSteps=10):
     for state in mc.allStates:
         (_, reward, _) = mc.generateEpisode(state, learnedPolicy, maxSteps, False).pop() # final step
-        if reward == 1000:
+        if reward == 0:
             print(state.clingoString() + '\t\t\t✅')
         else:
             print(state.clingoString() + '\t\t\t❌')

@@ -17,13 +17,10 @@ class MonteCarlo:
         return policy
 
     def getRandomAction(self, state: State):
-        availableActions = self.blocksWorld.getAvailableActions(state)
+        (_, availableActions, _, _, _, _) = self.blocksWorld.nextStep(state, None, t=0)
         # randomly choose one applicable action
         rnd = randint(0, len(availableActions)-1)
-        actions, reward = availableActions[rnd] 
-        actions = actions if actions != [] else None # goal state has no applicable move
-
-        return actions, reward
+        return availableActions[rnd]
 
     # TODO: heuristic for resonable number of maxSteps in episode
     def generateEpisode(self, state: State, policy: dict, maxSteps, exploringStarts, onPolicy=True) -> deque:
@@ -34,26 +31,21 @@ class MonteCarlo:
         count = 0
         while True:
             if count >= maxSteps:
-                #print('Max steps exceeded')
-                episode.append((state, -100, None))
+                #episode.append((state, -100, None))
+                break
+                
+            action = policy.get(state) if onPolicy else self.getRandomAction(state) # slow (clingo IO)
+            
+            (newState, availableActions, bestAction, nextReward, maxReward, goalReached) = self.blocksWorld.nextStep(state, action)
+            episode.append((state, maxReward, action)) # TODO: max or nextReward? Also, they are at maximum 99, not 100?
+            state = newState
+
+            if state == self.blocksWorld.goal:
+                episode.append((state, 0, None))
                 break
 
-            if onPolicy:
-                actions, reward = policy.get(state)
-            else:
-                actions, reward = self.getRandomAction(state) # slow (clingo IO)
-
-            if actions == None:
-                #print('Goal reached!')
-                episode.append((state, reward, None))
-                break
-
-            action = actions[0]
-            episode.append((state, reward, action))
-            # perform one action
-            state = self.blocksWorld.performMove(action, state) # slow (clingo IO)
             count += 1
-
+        #print(episode)
         return episode
 
     def learnPolicy(self, maxEpisodeLength, gamma, episodes):
@@ -62,7 +54,7 @@ class MonteCarlo:
         print('Initializing...')
         Q = dict()                      # {state {action : average value}}
         Returns = dict()                # {state {action : number of experiences}}
-        P = self.generateRandomPolicy() # {state : (action, reward)}
+        P = self.generateRandomPolicy() # {state : action}
 
         print('Learning...')
         for _ in range(0, episodes):
@@ -87,7 +79,6 @@ class MonteCarlo:
                     if state_t not in Q:
                         Q[state_t] = dict()
                         Returns[state_t] = dict()
-                        
                     if action_t not in Q[state_t]:
                         Q[state_t][action_t] = 0
                         Returns[state_t][action_t] = 0
@@ -97,7 +88,7 @@ class MonteCarlo:
                     Q[state_t][action_t] = Q[state_t][action_t] + (g_return - Q[state_t][action_t]) / (n+1)
                     Returns[state_t][action_t] += 1
                 
-                    # greedily choose best action with max value
+                    # use greedy exploration: choose action with highest return
                     best_action = action_t
                     argMax = -10000
                     for action, value in Q[state_t].items():
@@ -106,9 +97,7 @@ class MonteCarlo:
                             best_action = action
 
                     # update policy with best action
-                    tmp = list(P[state_t])
-                    tmp[0] = [best_action]
-                    P[state_t] = tuple(tmp)
+                    P[state_t] = best_action
         
         print('Done!')
         return P

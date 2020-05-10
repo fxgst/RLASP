@@ -6,91 +6,89 @@ import numpy as np
 class BlocksWorld:
     # TODO: single knowledge base to not reset clingo each time
     
-    def __init__(self, blocks: set, goal: State):
+    def __init__(self, blocks: list, goal: State):
         self.blocks = blocks
         self.clingo = ClingoBridge()
         self.goal = goal
 
-    def performMove(self, move: Move, state: State) -> State:
-        self.clingo = ClingoBridge() # reset clingo
-        program = []
-        # add blocks to program
-        program.append(('base', ''.join([block.clingoString() for block in self.blocks])))
-        # add rule of form { on(c, b, 0); on(a, table, 0); on(b, a, 0) } = 2.
-        rule = '{ ' + (''.join([on.clingoString() for on in state.locations])).replace('.', ';').rsplit(';', 1)[0] + ' } = ' + str(len(self.blocks)-1) + '.'
-        program.append(('base', rule))
-        # add move to program
-        program.append(('base', move.clingoString()))
-        # add main program file
-        self.clingo.addFile('updateState.lp')
-
-        self.clingo.run(program)
-
-        return self.parseState(self.clingo.output[0], 0)
-
     def generateAllStates(self):
         self.clingo = ClingoBridge() # reset clingo
-        # add blocks to file
-        blocks = (('base', ''.join([block.clingoString() for block in self.blocks])))
-        # add main program file
-        self.clingo.addFile('enumerateStates.lp')
 
+        blocks = ('base', ''.join([f'block({block}). ' for block in self.blocks]))
+        self.clingo.addFile('initial-states.lp')
         self.clingo.run([blocks])
         output = self.clingo.output
 
         states = np.full((len(output)), object)
         for i in range(0, len(output)):
-            states[i] = self.parseState(output[i], 0)
+            states[i] = self.parseState(output[i])
 
         return states
 
     def getRandomStartState(self) -> State:
         self.clingo = ClingoBridge() # reset clingo
         allStates = self.generateAllStates()
+
         # choose random start state
         rnd = randint(0, len(allStates)-1)
         return allStates[rnd]
 
-    def getAvailableActions(self, state: State, planAhead = 0) -> list:
+    def nextStep(self, state: State, action: Action, t=1):
         self.clingo = ClingoBridge() # reset clingo
-
         facts = []
-        # add state to ASP program
-        facts.append(('base', ''.join([on.clingoString() for on in state.locations])))
-        # add blocks to ASP program
-        facts.append(('base', ''.join([block.clingoString() for block in self.blocks])))
-        # add goal state to ASP program
-        facts.append(('base', ''.join([subgoal.clingoString() for subgoal in self.goal.locations])))
-        # declare constant in ASP program
-        facts.append(('base', '#const t = %i.' % planAhead))
-        # add main program file
-        self.clingo.addFile('nextMoves.lp')
 
+        # add dynmaic rules
+        facts.append(('base', ''.join([part_state.previousString() for part_state in state.locations])))
+        facts.append(('base', ''.join([part_state.goalString() for part_state in self.goal.locations])))
+        facts.append(('base', f'#const t = {t}.'))
+        if action:
+            facts.append(('base', action.clingoString()))
+
+        # add static main program file
+        self.clingo.addFile('blocksworld-mdp.lp')
         self.clingo.run(facts)
-        available_actions = []
+        output = self.clingo.output
 
-        for answerSet in self.clingo.output:
-            moves = []
-            reward = None
+        availableActions = []
+        partStates = []
+        maxReward = None
+        nextReward = None
+        bestAction = None
+        goalReached = False
 
-            for atom in answerSet:
-                if (atom.name == 'move'):
-                    topBlock = Block(atom.arguments[0])
-                    bottomBlock = Block(atom.arguments[1])
-                    moves.append(Move(topBlock, bottomBlock, 0))
-                elif (atom.name == 'totalReward'):
-                    reward = atom.arguments[0].number
-                else:
-                    print('ERROR: unexpected atom')
+        answerSet = output[0] # there should only be one answer set
+        for atom in answerSet:
+            if (atom.name == 'executable'):
+                availableActions.append(self.parseAction(atom))
+            elif (atom.name == 'partState'):
+                partStates.append(self.parsePartState(atom))
+            elif (atom.name == 'bestAction'):
+                bestAction = self.parseAction(atom)
+            elif (atom.name == 'nextReward'):
+                nextReward = atom.arguments[0].number
+            elif (atom.name == 'maxReward'):
+                maxReward = atom.arguments[0].number
+            elif (atom.name == 'goal'):
+                goalReached = True
+            else:
+                print('ERROR: unexpected atom')
 
-            available_actions.append((moves, reward))
+        return (State(set(partStates)), availableActions, bestAction, nextReward, maxReward, goalReached)
 
-        return available_actions
-        
-    def parseState(self, raw_state, time) -> State:
-        state = [] # state defined by one on(X,Y) per block
-        for on in raw_state:
-            topBlock = Block(on.arguments[0])
-            bottomBlock = Block(on.arguments[1])
-            state.append(On(topBlock, bottomBlock, time))
-        return State(set(state))
+    def parsePartState(self, atom) -> PartState:
+        onPredicate = atom.arguments[0]
+        topBlock = onPredicate.arguments[0]
+        bottomBlock = onPredicate.arguments[1]
+        return PartState(f'{topBlock},{bottomBlock}')
+
+    def parseAction(self, atom) -> Action:
+        movePredicate = atom.arguments[0]
+        topBlock = movePredicate.arguments[0]
+        bottomBlock = movePredicate.arguments[1]
+        return Action(f'move({topBlock},{bottomBlock})')
+
+    def parseState(self, atoms) -> State:
+        partStates = []
+        for partState in atoms:
+            partStates.append(self.parsePartState(partState))
+        return State(set(partStates))

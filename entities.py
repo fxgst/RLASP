@@ -1,71 +1,42 @@
-class Block:
-    def __init__(self, name):
-        self.name = name
+class PartState:
+    def __init__(self, id: str):
+        self.id = id
 
     def __repr__(self):
-        return '%s' % self.name
-    
-    def clingoString(self):
-        return 'block(%s). ' % self.name
+        return self.id
 
     def __eq__(self, other):
-        return self.name == other.name
+        return self.id == other.id
+
+    def clingoString(self):
+        return f'partState(on({self.id})). '
+
+    def previousString(self):
+        return f'previous(on({self.id})). '
+
+    def goalString(self):
+        return f'subgoal({self.id}). '
 
     def __hash__(self):
-        return hash(self.name)
-      
-class SubGoal:
-    def __init__(self, x: Block, y: Block):
-        self.x = x
-        self.y = y
+        return hash(id)
+
+class Action:
+    def __init__(self, id: str):
+        self.id = id
 
     def __repr__(self):
-        return '%s is on top of %s' % (self.x, self.y)
+        return self.id
 
     def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
+        if type(self) != type(other):
+            return False
+        return self.id == other.id
 
     def clingoString(self):
-        return 'subgoal(%s, %s). ' % (self.x, self.y)
+        return f'action({self.id}). '
 
     def __hash__(self):
-        return hash((self.x, self.y))
-
-class On:
-    def __init__(self, x: Block, y: Block, time = 0):
-        self.x = x
-        self.y = y
-        self.time = time
-
-    def __repr__(self):
-        return '%s is on top of %s' % (self.x, self.y)
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-    def clingoString(self):
-        return 'on(%s, %s, %s). ' % (self.x, self.y, self.time)
-
-    def __hash__(self):
-        return hash((self.x, self.y))
-
-class Move:
-    def __init__(self, x: Block, y: Block, time: int):
-        self.x = x
-        self.y = y
-        self.time = time
-
-    def __repr__(self):
-        return '%s: Move %s on top of %s' % (self.time, self.x, self.y)
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y and self.time == other.time
-
-    def clingoString(self):
-        return 'move(%s, %s, %s). ' % (self.x, self.y, self.time)
-
-    def __hash__(self):
-        return hash((self.x, self.y, self.time))
+        return hash(self.id)
 
 class State:
     def __init__(self, locations: set):
@@ -73,6 +44,12 @@ class State:
 
     def clingoString(self):
         return ''.join([location.clingoString() for location in self.locations])
+    
+    def previousString(self):
+        return ''.join([location.previousString() for location in self.locations])
+
+    def goalString(self):
+        return ''.join([location.goalString() for location in self.locations])
 
     def __repr__(self):
         return  ', '.join([location.__repr__() for location in self.locations])
