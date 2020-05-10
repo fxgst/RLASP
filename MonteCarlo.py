@@ -36,7 +36,7 @@ class MonteCarlo:
                 
             action = policy.get(state) if onPolicy else self.getRandomAction(state) # slow (clingo IO)
             
-            (newState, availableActions, bestAction, nextReward, maxReward, goalReached) = self.blocksWorld.nextStep(state, action)
+            (newState, availableActions, bestAction, nextReward, maxReward, goalReached) = self.blocksWorld.nextStep(state, action, t=1)
             episode.append((state, maxReward, action)) # TODO: max or nextReward? Also, they are at maximum 99, not 100?
             state = newState
 

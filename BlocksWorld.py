@@ -33,7 +33,7 @@ class BlocksWorld:
         rnd = randint(0, len(allStates)-1)
         return allStates[rnd]
 
-    def nextStep(self, state: State, action: Action, t=1):
+    def nextStep(self, state: State, action: Action, t):
         self.clingo = ClingoBridge() # reset clingo
         facts = []
 
