@@ -29,9 +29,10 @@ class MonteCarlo:
                 break
 
             if onPolicy and (state in policy):
-                action = policy.get(state)
+                action = policy[state]
             else:
                 action = self.getRandomAction(state) # slow (clingo IO)
+                policy[state] = action
 
             if action == None:
                 # goal reached
