@@ -6,7 +6,7 @@
 
 % input predicates ************************************************************
 
-% previous(X) ...	X is a term represenation of a partState predicate
+% previous(X) ...	X is a term represenation of a state predicate
 % action(X) ...  	X is term representation of an action that has been chosen
 % subgoal(X,Y) ... 	X is on top of Y in goal state
 
@@ -15,15 +15,15 @@ subgoal(a, table). subgoal(b, a). subgoal(c, b).
 
 % *****************************************************************************
 
-% executable(X) ... X is term represenation of an action that is executable in the follow-up partState
+% executable(X) ... X is term represenation of an action that is executable in the follow-up state
 executable(move(X,Y)) :- executable(X,Y,1), t > 0.
 executable(move(X,Y)) :- executable(X,Y,0), t = 0.
 
 on(X,Y,0) :- previous(on(X,Y)).
 move(X,Y,0) :- action(move(X,Y)).
 
-% partState(X) ... X is a term represenation of a partState predicate that holds in the follow-up partState
-partState(on(X,Y)) :- on(X,Y,1).
+% state(X) ... X is a term represenation of a state predicate that holds in the follow-up state
+state(on(X,Y)) :- on(X,Y,1).
 
 % nextReward(N) ... N is the reward the agents gets after performing a given action
 nextReward(N) :- totalReward(N,1). 
@@ -82,7 +82,7 @@ maxReward(S)     :- S = #sum { R,T : reward(R,T) }.
 
 % output signature
 #show executable/1.
-#show partState/1.
+#show state/1.
 #show bestAction/1.
 #show nextReward/1.
 #show maxReward/1.

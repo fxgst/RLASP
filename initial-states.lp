@@ -9,9 +9,9 @@ block(a). block(b). block(c).
 
 
 % *****************************************************************************
-% partState/1 with partState(X) if X is a term representation of a partState predicate
+% state/1 with state(X) if X is a term representation of a state predicate
 
-partState(on(X,Y)) :- on(X,Y).
+state(on(X,Y)) :- on(X,Y).
 
 % location(X)  ... X is a location to place a block on
 % on(X,Y)      ... block X is placed on location Y
@@ -32,4 +32,4 @@ supported(X) :- on(X,table).
 supported(X) :- on(X,Y), supported(Y).
 :- block(X), not supported(X).
 
-#show partState/1.
+#show state/1.

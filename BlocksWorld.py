@@ -49,13 +49,12 @@ class BlocksWorld:
         maxReward = None
         nextReward = None
         bestAction = None
-        # goalReached = False
 
         answerSet = output[0] # there should only be one answer set
         for atom in answerSet:
             if (atom.name == 'executable'):
                 availableActions.append(self.parseAction(atom))
-            elif (atom.name == 'partState'):
+            elif (atom.name == 'state'):
                 partStates.append(self.parsePartState(atom))
             elif (atom.name == 'bestAction'):
                 bestAction = self.parseAction(atom)
@@ -63,8 +62,6 @@ class BlocksWorld:
                 nextReward = atom.arguments[0].number
             elif (atom.name == 'maxReward'):
                 maxReward = atom.arguments[0].number
-            # elif (atom.name == 'goal'):
-            #     goalReached = True
             else:
                 print('ERROR: unexpected atom')
 
@@ -87,3 +84,4 @@ class BlocksWorld:
         for partState in atoms:
             partStates.append(self.parsePartState(partState))
         return State(set(partStates))
+        

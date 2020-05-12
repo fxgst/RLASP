@@ -6,22 +6,25 @@ from collections import deque
 class MonteCarlo:
     def __init__(self, blocksWorld: BlocksWorld):
         self.blocksWorld = blocksWorld
-        self.allStates = self.blocksWorld.generateAllStates()
+        self.allStates = self.blocksWorld.generateAllStates() # clingo IO
 
-    def getRandomAction(self, state: State) -> Action:
-        (_, availableActions, _, _, _) = self.blocksWorld.nextStep(state, None, t=0)
-        # randomly choose one applicable action
-        if len(availableActions) > 0:
-            rnd = randint(0, len(availableActions)-1)
-            return availableActions[rnd]
+    def getInitialActions(self, state: State) -> Action:
+        (_, availableActions, _, _, _) = self.blocksWorld.nextStep(state, None, t=0) # clingo IO   
+        return availableActions
 
+    def getRandomAction(self, actions: list):
+        if len(actions) > 0:
+            rnd = randint(0, len(actions)-1)
+            return actions[rnd]
         return None 
 
     # TODO: heuristic for resonable number of maxSteps in episode
     def generateEpisode(self, state: State, policy: dict, maxSteps: int, exploringStarts: bool, onPolicy: bool) -> deque:
         episode = deque() # deque allows much faster appending than array
+        actions = self.getInitialActions(state)  # clingo IO
+
         if exploringStarts and onPolicy:
-            policy[state] = self.getRandomAction(state) # slow (clingo IO)
+            policy[state] = self.getRandomAction(actions)
 
         count = 0
         while True:
@@ -31,16 +34,18 @@ class MonteCarlo:
             if onPolicy and (state in policy):
                 action = policy[state]
             else:
-                action = self.getRandomAction(state) # slow (clingo IO)
-                policy[state] = action
+                action = self.getRandomAction(actions)
+                if onPolicy:
+                    policy[state] = action
 
             if action == None:
                 # goal reached
                 break
 
-            (newState, _, _, nextReward, _) = self.blocksWorld.nextStep(state, action, t=1) # slow (clingo IO)
+            (newState, newActions, _, nextReward, _) = self.blocksWorld.nextStep(state, action, t=1) # clingo IO
             episode.append((state, nextReward, action))
             state = newState
+            actions = newActions
             count += 1
 
         return episode
