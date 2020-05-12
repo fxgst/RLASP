@@ -70,19 +70,19 @@ class BlocksWorld:
 
         return (State(set(partStates)), availableActions, bestAction, nextReward, maxReward)
 
-    def parsePartState(self, atom) -> PartState:
+    def parsePartState(self, atom: clingo.Symbol) -> PartState:
         onPredicate = atom.arguments[0]
         topBlock = onPredicate.arguments[0]
         bottomBlock = onPredicate.arguments[1]
         return PartState(f'on({topBlock},{bottomBlock})')
 
-    def parseAction(self, atom) -> Action:
+    def parseAction(self, atom: clingo.Symbol) -> Action:
         movePredicate = atom.arguments[0]
         topBlock = movePredicate.arguments[0]
         bottomBlock = movePredicate.arguments[1]
         return Action(f'move({topBlock},{bottomBlock})')
 
-    def parseState(self, atoms) -> State:
+    def parseState(self, atoms: list) -> State:
         partStates = []
         for partState in atoms:
             partStates.append(self.parsePartState(partState))

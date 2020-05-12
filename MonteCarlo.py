@@ -7,16 +7,8 @@ class MonteCarlo:
     def __init__(self, blocksWorld: BlocksWorld):
         self.blocksWorld = blocksWorld
         self.allStates = self.blocksWorld.generateAllStates()
-        
-    def generateRandomPolicy(self):
-        policy = dict()
-        for i in range(0, len(self.allStates)):
-            state = self.allStates[i]
-            policy[state] = self.getRandomAction(state)
 
-        return policy
-
-    def getRandomAction(self, state: State):
+    def getRandomAction(self, state: State) -> Action:
         (_, availableActions, _, _, _) = self.blocksWorld.nextStep(state, None, t=0)
         # randomly choose one applicable action
         if len(availableActions) > 0:
@@ -26,7 +18,7 @@ class MonteCarlo:
         return None 
 
     # TODO: heuristic for resonable number of maxSteps in episode
-    def generateEpisode(self, state: State, policy: dict, maxSteps, exploringStarts, onPolicy=True) -> deque:
+    def generateEpisode(self, state: State, policy: dict, maxSteps: int, exploringStarts: bool, onPolicy: bool) -> deque:
         episode = deque() # deque allows much faster appending than array
         if exploringStarts and onPolicy:
             policy[state] = self.getRandomAction(state) # slow (clingo IO)
@@ -36,8 +28,11 @@ class MonteCarlo:
             if count >= maxSteps:
                 break
 
-            action = policy.get(state) if onPolicy else self.getRandomAction(state) # slow (clingo IO)
-            
+            if onPolicy and (state in policy):
+                action = policy.get(state)
+            else:
+                action = self.getRandomAction(state) # slow (clingo IO)
+
             if action == None:
                 # goal reached
                 break
@@ -46,22 +41,22 @@ class MonteCarlo:
             episode.append((state, nextReward, action))
             state = newState
             count += 1
-    
+
         return episode
 
-    def learnPolicy(self, maxEpisodeLength, gamma, episodes):
+    def learnPolicy(self, maxEpisodeLength: int, gamma: float, numberEpisodes: int) -> dict:
         """ First visit exploring starts Monte Carlo evaluation of policy P """
 
         print('Initializing...')
-        Q = dict()                      # {state {action : average value}}
-        Returns = dict()                # {state {action : number of experiences}}
-        P = self.generateRandomPolicy() # {state : action}
+        Q = dict()        # {state {action : average value}}
+        Returns = dict()  # {state {action : number of experiences}}
+        P = dict()        # {state : action}
 
         print('Learning...')
-        for _ in range(0, episodes):
+        for _ in range(0, numberEpisodes):
             rnd = randint(0, len(self.allStates)-1)
             startState = self.allStates[rnd]
-            episode = self.generateEpisode(startState, P, maxEpisodeLength, exploringStarts=True) # very slow
+            episode = self.generateEpisode(startState, P, maxEpisodeLength, exploringStarts=True, onPolicy=True) # very slow
 
             g_return = 0
             for t in range(len(episode)-1, 0-1, -1):
