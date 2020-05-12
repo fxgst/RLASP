@@ -17,10 +17,13 @@ class MonteCarlo:
         return policy
 
     def getRandomAction(self, state: State):
-        (_, availableActions, _, _, _, _) = self.blocksWorld.nextStep(state, None, t=0)
+        (_, availableActions, _, _, _) = self.blocksWorld.nextStep(state, None, t=0)
         # randomly choose one applicable action
-        rnd = randint(0, len(availableActions)-1)
-        return availableActions[rnd]
+        if len(availableActions) > 0:
+            rnd = randint(0, len(availableActions)-1)
+            return availableActions[rnd]
+
+        return None 
 
     # TODO: heuristic for resonable number of maxSteps in episode
     def generateEpisode(self, state: State, policy: dict, maxSteps, exploringStarts, onPolicy=True) -> deque:
@@ -31,21 +34,19 @@ class MonteCarlo:
         count = 0
         while True:
             if count >= maxSteps:
-                #episode.append((state, -100, None))
                 break
-                
+
             action = policy.get(state) if onPolicy else self.getRandomAction(state) # slow (clingo IO)
             
-            (newState, availableActions, bestAction, nextReward, maxReward, goalReached) = self.blocksWorld.nextStep(state, action, t=1)
-            episode.append((state, maxReward, action)) # TODO: max or nextReward? Also, they are at maximum 99, not 100?
-            state = newState
-
-            if state == self.blocksWorld.goal:
-                episode.append((state, 0, None))
+            if action == None:
+                # goal reached
                 break
 
+            (newState, _, _, nextReward, _) = self.blocksWorld.nextStep(state, action, t=1) # slow (clingo IO)
+            episode.append((state, nextReward, action))
+            state = newState
             count += 1
-        #print(episode)
+    
         return episode
 
     def learnPolicy(self, maxEpisodeLength, gamma, episodes):
@@ -63,8 +64,8 @@ class MonteCarlo:
             episode = self.generateEpisode(startState, P, maxEpisodeLength, exploringStarts=True) # very slow
 
             g_return = 0
-            for t in range(len(episode)-1-1, 0-1, -1):
-                g_return = gamma * g_return + episode[t+1][1]
+            for t in range(len(episode)-1, 0-1, -1):
+                g_return = gamma * g_return + episode[t][1]
 
                 state_t = episode[t][0]
                 action_t = episode[t][2]

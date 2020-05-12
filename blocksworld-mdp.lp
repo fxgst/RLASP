@@ -5,24 +5,25 @@
 
 
 % input predicates ************************************************************
+
 % previous(X) ...	X is a term represenation of a partState predicate
 % action(X) ...  	X is term representation of an action that has been chosen
 % subgoal(X,Y) ... 	X is on top of Y in goal state
 
-on(X,Y,0) :- previous(on(X,Y)).
-move(X,Y,0) :- action(move(X,Y)).
+subgoal(a, table). subgoal(b, a). subgoal(c, b).
 
 
-% output predicates ***********************************************************
+% *****************************************************************************
+
 % executable(X) ... X is term represenation of an action that is executable in the follow-up partState
 executable(move(X,Y)) :- executable(X,Y,1), t > 0.
 executable(move(X,Y)) :- executable(X,Y,0), t = 0.
 
+on(X,Y,0) :- previous(on(X,Y)).
+move(X,Y,0) :- action(move(X,Y)).
+
 % partState(X) ... X is a term represenation of a partState predicate that holds in the follow-up partState
 partState(on(X,Y)) :- on(X,Y,1).
-
-% goal ... true if the goal state has been reached in the follow-up state
-goal :- goal(1).
 
 % nextReward(N) ... N is the reward the agents gets after performing a given action
 nextReward(N) :- totalReward(N,1). 
@@ -64,7 +65,7 @@ occupied(X,T) :- block(X), on(_,X,T).
 free(X,T)     :- location(X), time(T), not occupied(X,T).
 
 % at each time point, make one move unless the goal has been reached
-executable(X,Y,T) :- block(X), free(X,T), free(Y,T), not on(X,Y,T), X != Y.
+executable(X,Y,T) :- block(X), free(X,T), free(Y,T), not on(X,Y,T), X != Y, not goal(T).
 { move(X,Y,T) : executable(X,Y,T) } = 1 :- time(T), T < t, not goal(T).
 
 % by default, blocks don't change location (frame axiom)
@@ -79,10 +80,9 @@ totalReward(S,T) :- time(T), S = #sum { R : reward(R,T) }.
 maxReward(S)     :- S = #sum { R,T : reward(R,T) }.
 #maximize { S : maxReward(S) }.
 
-% output siganture
+% output signature
 #show executable/1.
 #show partState/1.
 #show bestAction/1.
 #show nextReward/1.
 #show maxReward/1.
-#show goal/0.
