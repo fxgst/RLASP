@@ -42,10 +42,10 @@ class MonteCarlo:
                 # goal reached
                 break
 
-            (newState, newActions, _, nextReward, _) = self.blocksWorld.nextStep(state, action, t=1) # clingo IO
+            (nextState, nextActions, _, nextReward, _) = self.blocksWorld.nextStep(state, action, t=1) # clingo IO
             episode.append((state, nextReward, action))
-            state = newState
-            actions = newActions
+            state = nextState
+            actions = nextActions
             count += 1
 
         return episode

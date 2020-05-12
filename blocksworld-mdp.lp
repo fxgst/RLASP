@@ -10,7 +10,7 @@
 % action(X) ...  	X is term representation of an action that has been chosen
 % subgoal(X,Y) ... 	X is on top of Y in goal state
 
-subgoal(a, table). subgoal(b, a). subgoal(c, b).
+subgoal(a, table). subgoal(b, a). subgoal(c, b). %subgoal(d, c). subgoal(e, d).
 
 
 % *****************************************************************************
@@ -40,17 +40,15 @@ time(0..t).
 goal(T) :- time(T), { not on(X,Y,T) : subgoal(X,Y) } = 0.    
  
 % rewards depending on the previous state, the chosen action, and the follow-up state
-
 reward(100,T) :- goal(T), not goal(T-1). % big reward for reaching the goal the first time
 reward(-1,T)  :- move(_,_,T-1).          % small penalty for each move
 
-% QUESTION: Whats happens if the reward is 10 instead of 100, what if it is 1? Woudld this change the learning behaviour?
 
 % Alternatively, we could consider a rewards for reaching subgoals and penalities for loosing them
+% This has been tested, performance differences are negligible
 %reward(100,T)  :- subgoal(X,Y), on(X,Y,T), not on(X,Y,T-1). % reward for reaching a subgoal the first time
 %reward(-100,T) :- subgoal(X,Y), on(X,Y,T-1), not on(X,Y,T). % penalty for loosing a subgoal
 %reward(-1,T)  :- move(_,_,T-1).                             % small penalty for each move
-% This has not been tested yet
 
 
 % background knowledge ********************************************************
@@ -83,6 +81,6 @@ maxReward(S)     :- S = #sum { R,T : reward(R,T) }.
 % output signature
 #show executable/1.
 #show state/1.
-#show bestAction/1.
 #show nextReward/1.
-#show maxReward/1.
+%#show bestAction/1.
+%#show maxReward/1.
