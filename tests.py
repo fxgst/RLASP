@@ -1,17 +1,17 @@
 from entities import *
 
 # test whether goal can be reached from all start states
-def testPolicy(policy, mc, maxSteps=10):
-	finalState = State({PartState('on(a,table)'),PartState('on(b,a)'), PartState('on(c,table)')})
+def testPolicy(policy, mc, maxEpisodeLength):
+	finalState = State({PartState('on(a,table)'),PartState('on(b,a)'), PartState('on(c,table)')})#, PartState('on(d,table)')})
 	finalAction = Action('move(c,b)')
 	num_steps = []
 
 	for state in mc.allStates:
-		steps = mc.generateEpisode(state, policy, maxSteps, False, True)
+		steps = mc.generateEpisode(state, policy, maxEpisodeLength, False, True)
 		if steps:
 			num_steps.append(len(steps))
-			(state, _, action) = steps.pop() # final step
-			if state == finalState and action == finalAction:
+			(s, _, a) = steps.pop() # final step
+			if s == finalState and a == finalAction:
 				print(f'{str(state):<80} {"✅":>1}')
 			else:
 				print(f'{str(state):<80} {"❌":>1}')

@@ -18,19 +18,16 @@ class MonteCarlo:
             return actions[rnd]
         return None 
 
-    # TODO: heuristic for resonable number of maxSteps in episode
-    def generateEpisode(self, state: State, policy: dict, maxSteps: int, exploringStarts: bool, onPolicy: bool) -> deque:
+    # maxEpisodeLength should at least be (n-1)^2
+    def generateEpisode(self, state: State, policy: dict, maxEpisodeLength: int, exploringStarts: bool, onPolicy: bool) -> deque:
         episode = deque() # deque allows much faster appending than array
-        actions = self.getInitialActions(state)  # clingo IO
+        actions = self.getInitialActions(state) # clingo IO
 
         if exploringStarts and onPolicy:
             policy[state] = self.getRandomAction(actions)
 
         count = 0
-        while True:
-            if count >= maxSteps:
-                break
-
+        while count <= maxEpisodeLength:
             if onPolicy and (state in policy):
                 action = policy[state]
             else:

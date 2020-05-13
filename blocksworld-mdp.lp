@@ -40,8 +40,8 @@ time(0..t).
 goal(T) :- time(T), { not on(X,Y,T) : subgoal(X,Y) } = 0.    
  
 % rewards depending on the previous state, the chosen action, and the follow-up state
-reward(100,T) :- goal(T), not goal(T-1). % big reward for reaching the goal the first time
-reward(-1,T)  :- move(_,_,T-1).          % small penalty for each move
+reward(100,T) :- goal(T), not goal(T-1).    % big reward for reaching the goal the first time
+reward(0,T)  :- move(_,_,T-1).              % small penalty for each move
 
 
 % Alternatively, we could consider a rewards for reaching subgoals and penalities for loosing them

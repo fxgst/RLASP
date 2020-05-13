@@ -5,8 +5,8 @@ from tests import testPolicy
 blocksWorld = BlocksWorld()
 
 mc = MonteCarlo(blocksWorld)
-learnedPolicy = mc.learnPolicy(maxEpisodeLength=10, gamma=1, numberEpisodes=128) # {state : action}
+learnedPolicy = mc.learnPolicy(maxEpisodeLength=8, gamma=0.1, numberEpisodes=160) # {state : action}
 print('Learned policy: %s' % learnedPolicy)
 print()
 
-testPolicy(learnedPolicy, mc)
+testPolicy(learnedPolicy, mc, 8)
