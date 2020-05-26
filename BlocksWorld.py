@@ -50,7 +50,7 @@ class BlocksWorld:
         nextReward = None
         bestAction = None
 
-        answerSet = output[0] # there should only be one answer set
+        answerSet = output[-1] # take last, most optimal output
         for atom in answerSet:
             if (atom.name == 'executable'):
                 availableActions.append(self.parseAction(atom))

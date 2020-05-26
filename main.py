@@ -1,12 +1,4 @@
-from BlocksWorld import *
-from MonteCarlo import *
-from tests import testPolicy
+from tests import generateRuns, test
 
-blocksWorld = BlocksWorld()
-
-mc = MonteCarlo(blocksWorld)
-learnedPolicy = mc.learnPolicy(maxEpisodeLength=8, gamma=0.1, numberEpisodes=160) # {state : action}
-print('Learned policy: %s' % learnedPolicy)
-print()
-
-testPolicy(learnedPolicy, mc, 8)
+generateRuns()
+test()
