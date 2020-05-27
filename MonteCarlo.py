@@ -1,6 +1,6 @@
 from BlocksWorld import *
 from entities import State
-from random import randint
+from random import randint, random
 from collections import deque
 
 class MonteCarlo:
@@ -20,26 +20,24 @@ class MonteCarlo:
         return None
 
     # maxEpisodeLength should be at least 2*(n-1)
-    def generateEpisode(self, state: State, policy: dict, maxEpisodeLength: int, exploringStarts: bool, onPolicy: bool) -> deque:
+    def generateEpisode(self, state: State, policy: dict, maxEpisodeLength: int, planningFactor: float, exploringStarts: bool, onPolicy: bool) -> deque:
         episode = deque() # deque allows much faster appending than array
         actions = self.getInitialActions(state) # clingo IO
 
         count = 0
         while count <= maxEpisodeLength:
-            if exploringStarts:
-                if (state in policy) and count != 0 and onPolicy:
-                    action = policy[state]
-                else:
-                    action = self.getRandomAction(actions)
-                    if onPolicy and count != 0:
-                        policy[state] = action
-            else:
+            if planningFactor <= random():
                 if (state in policy) and onPolicy:
-                    action = policy[state]
+                    if exploringStarts and count == 0:
+                        action = self.getRandomAction(actions)
+                    else:
+                        action = policy[state]
                 else:
-                    action = self.getRandomAction(actions)
-                    if onPolicy:
-                        policy[state] = action    
+                    action = self.getRandomAction(actions)  
+            else:
+                # plan and choose best action
+                (_, _, bestAction, _, _) = self.blocksWorld.nextStep(state, None, t=maxEpisodeLength) # clingo IO
+                action = bestAction
 
             if action == None:
                 # goal reached
@@ -57,7 +55,7 @@ class MonteCarlo:
         (_, _, _, _, maxReward) = self.blocksWorld.nextStep(startState, None, len(startState.locations)*2) # clingo IO
         return (episodeReward - minimalReward) / (maxReward - minimalReward)
 
-    def learnPolicy(self, maxEpisodeLength: int, gamma: float, numberEpisodes: int) -> dict:
+    def learnPolicy(self, maxEpisodeLength: int, gamma: float, numberEpisodes: int, planningFactor: float) -> dict:
         """ First visit exploring starts Monte Carlo evaluation of policy P """
 
         print('Initializing...')
@@ -69,7 +67,7 @@ class MonteCarlo:
         for _ in range(0, numberEpisodes):
             rnd = randint(0, len(self.allStates)-1)
             startState = self.allStates[rnd]
-            episode = self.generateEpisode(startState, P, maxEpisodeLength, exploringStarts=True, onPolicy=True) # clingo IO
+            episode = self.generateEpisode(startState, P, maxEpisodeLength, planningFactor, exploringStarts=True, onPolicy=True) # clingo IO
 
             g_return = 0
             for t in range(len(episode)-1, 0-1, -1):

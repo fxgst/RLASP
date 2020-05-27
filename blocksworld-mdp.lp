@@ -82,5 +82,5 @@ maxReward(S)     :- S = #sum { R,T : reward(R,T) }.
 #show executable/1.
 #show state/1.
 #show nextReward/1.
-%#show bestAction/1.
+#show bestAction/1.
 #show maxReward/1.

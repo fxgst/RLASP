@@ -7,12 +7,15 @@ import numpy as np
 from BlocksWorld import *
 from MonteCarlo import *
 
-number_runs 		= 5
-number_episodes 	= 50
+number_runs 		= 10
+number_episodes 	= 800
 max_episode_len		= 8
+planning_factor     = 0.1
 mode 				= 'mean'
-test_name			= '4b_50e_5r'
-plot_every_n		= 1#number_episodes/100
+test_name			= '4b_' + str(number_episodes) + 'e' + '_' + str(number_runs) + 'r'+ '_' + str(planning_factor) + 'pf'
+plot_points 		= 200
+plot_every_n		= int(number_episodes/plot_points)
+
 
 def plot(arr, every_n):
 	matplotlib.use('pgf')
@@ -31,7 +34,7 @@ def plot(arr, every_n):
 def test(): 
 	a = np.empty(number_runs, dtype=object)
 	for i in range(0, number_runs):
-		with open('./testdata/' + test_name + '_' + mode + f'_{i}.pkl', 'rb') as f:
+		with open('./testdata/' + test_name + f'_{i}.pkl', 'rb') as f:
 			a[i] = pickle.load(f)
 	
 	if mode == 'median':
@@ -46,21 +49,21 @@ def generateRuns():
 	print('Generating runs...')
 
 	for i in range(0, number_runs):
-		print(i)
+		print('Run ' + str(i))
 		mc = MonteCarlo(blocksWorld)
-		mc.learnPolicy(maxEpisodeLength=max_episode_len, gamma=1, numberEpisodes=number_episodes)
+		mc.learnPolicy(maxEpisodeLength=max_episode_len, gamma=1, numberEpisodes=number_episodes, planningFactor=planning_factor)
 
-		with open('./testdata/' + test_name + '_' + mode + f'_{i}.pkl', 'wb') as f:
+		with open('./testdata/' + test_name + f'_{i}.pkl', 'wb') as f:
 			pickle.dump(mc.returnRatios, f)
 
 # test whether goal can be reached from all start states
 def testPolicy(policy, mc, maxEpisodeLength):
-	finalState = State({PartState('on(a,table)'),PartState('on(b,a)'), PartState('on(c,table)')})#, PartState('on(d,table)')})
-	finalAction = Action('move(c,b)')
+	finalState = State({PartState('on(a,table)'),PartState('on(b,a)'), PartState('on(c,b)'), PartState('on(d,table)')})
+	finalAction = Action('move(d,c)')
 	num_steps = []
 
 	for state in mc.allStates:
-		steps = mc.generateEpisode(state, policy, maxEpisodeLength, False, True)
+		steps = mc.generateEpisode(state, policy, maxEpisodeLength, 0, False, True)
 		if steps:
 			num_steps.append(len(steps))
 			(s, _, a) = steps.pop() # final step
