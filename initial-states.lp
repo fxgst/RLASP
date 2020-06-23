@@ -1,8 +1,8 @@
 % generate all valid initial states for the blocks world with n blocks
 
-% input predicates ************************************************************
+% input predicates ********************************************************************************
 block(a; b; c; d; e).
-% *****************************************************************************
+% *************************************************************************************************
 
 % state/1 with state(X) if X is a term representation of a state predicate
 state(on(X,Y)) :- on(X,Y).

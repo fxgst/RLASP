@@ -1,14 +1,14 @@
 % MDP specification for the blocks world
 
-#defined action/1. % silence warning that action does not appear in rule head
-
-% input predicates ************************************************************
+% input predicates ********************************************************************************
 % previous(X) ...	X is a term represenation of a state predicate, provided by BlocksWorld.py, optional
 % action(X) ...  	X is term representation of an action that has been chosen, provided by BlocksWorld.py, optional
 % subgoal(X,Y) ... 	X is on top of Y in goal state
 
 subgoal(a, table). subgoal(b, a). subgoal(c, b). subgoal(d, c). subgoal(e, d).
-% *****************************************************************************
+% *************************************************************************************************
+
+#defined action/1. % silence warning that action does not appear in rule head
 
 % executable(X) ... X is term represenation of an action that is executable in the follow-up state
 executable(move(X,Y)) :- executable(X,Y,1), t > 0.
@@ -40,7 +40,7 @@ reward(-1,T)  :- move(_,_,T-1).                 % small penalty for each move
 %reward(-100,T) :- subgoal(X,Y), on(X,Y,T-1), not on(X,Y,T).    % penalty for loosing a subgoal
 %reward(-1,T)   :- move(_,_,T-1).                               % small penalty for each move
 
-% background knowledge ********************************************************
+% background knowledge ****************************************************************************
 
 % the table and every block is a location
 block(X) :- on(X,_,0).
