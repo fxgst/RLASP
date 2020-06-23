@@ -1,18 +1,13 @@
 % MDP specification for the blocks world
-% t ... constant that specifies the maximal number of planning steps
 
 #defined action/1. % silence warning that action does not appear in rule head
 
-
 % input predicates ************************************************************
-
-% previous(X) ...	X is a term represenation of a state predicate
-% action(X) ...  	X is term representation of an action that has been chosen
+% previous(X) ...	X is a term represenation of a state predicate, provided by BlocksWorld.py, optional
+% action(X) ...  	X is term representation of an action that has been chosen, provided by BlocksWorld.py, optional
 % subgoal(X,Y) ... 	X is on top of Y in goal state
 
-subgoal(a, table). subgoal(b, a). subgoal(c, b). subgoal(d, c). %subgoal(e, d).
-
-
+subgoal(a, table). subgoal(b, a). subgoal(c, b). subgoal(d, c). subgoal(e, d).
 % *****************************************************************************
 
 % executable(X) ... X is term represenation of an action that is executable in the follow-up state
@@ -31,10 +26,7 @@ nextReward(N) :- totalReward(N,1).
 % bestAction(X) ... X is a term representation of the next action that yields maximal reward within t steps
 bestAction(move(X,Y)) :- move(X,Y,0).
 
-
-% rewards and absorbing states of the blocksworld MDP *************************
-
-% we consider t planning steps, t defaults to 0
+% consider t planning steps, provided by BlocksWorld.py
 time(0..t).
 
 goal(T) :- time(T), { not on(X,Y,T) : subgoal(X,Y) } = 0.    
@@ -43,13 +35,10 @@ goal(T) :- time(T), { not on(X,Y,T) : subgoal(X,Y) } = 0.
 reward(100,T) :- goal(T), not goal(T-1).        % big reward for reaching the goal the first time
 reward(-1,T)  :- move(_,_,T-1).                 % small penalty for each move
 
-
-% Alternatively, we could consider a rewards for reaching subgoals and penalities for loosing them
-% This has been tested, performance differences are negligible
-%reward(100,T)  :- subgoal(X,Y), on(X,Y,T), not on(X,Y,T-1). % reward for reaching a subgoal the first time
-%reward(-100,T) :- subgoal(X,Y), on(X,Y,T-1), not on(X,Y,T). % penalty for loosing a subgoal
-%reward(-1,T)  :- move(_,_,T-1).                             % small penalty for each move
-
+% Alternatively, consider rewards for reaching subgoals and penalities for loosing them
+%reward(100,T)  :- subgoal(X,Y), on(X,Y,T), not on(X,Y,T-1).    % reward for reaching a subgoal the first time
+%reward(-100,T) :- subgoal(X,Y), on(X,Y,T-1), not on(X,Y,T).    % penalty for loosing a subgoal
+%reward(-1,T)   :- move(_,_,T-1).                               % small penalty for each move
 
 % background knowledge ********************************************************
 
@@ -66,7 +55,7 @@ free(X,T)     :- location(X), time(T), not occupied(X,T).
 executable(X,Y,T) :- block(X), free(X,T), free(Y,T), not on(X,Y,T), X != Y, not goal(T).
 { move(X,Y,T) : executable(X,Y,T) } = 1 :- time(T), T < t, not goal(T).
 
-% by default, blocks don't change location (frame axiom)
+% by default, blocks do not change location (frame axiom)
 on(X,Y,T+1) :- on(X,Y,T), not -on(X,Y,T+1), time(T).
 
 % effects of action move

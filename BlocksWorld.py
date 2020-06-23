@@ -63,7 +63,7 @@ class BlocksWorld:
             elif (atom.name == 'maxReward'):
                 maxReward = atom.arguments[0].number
             else:
-                print('ERROR: unexpected atom')
+                print(f'ERROR: unexpected atom "{atom.name}"')
 
         return (State(set(partStates)), availableActions, bestAction, nextReward, maxReward)
 
