@@ -19,11 +19,9 @@ def plot(plotname, arrays):
 		'text.usetex': True,
 		'pgf.rcfonts': False,
 	})
-
 	for arr in arrays:
 		plt.plot(range(0, len(arr[0]), plot_every_n), arr[0][::plot_every_n], '.', label=arr[1])
 
-	#plt.legend(loc="lower right")
 	plt.legend(bbox_to_anchor=(0, 0.93, 1, 0.2), loc="upper left", mode='expand', ncol=4)
 	plt.ylim(0, 1)
 	plt.ylabel('return ratio')
@@ -50,15 +48,18 @@ def loadPlotData(filename):
 
 	return result
 
-def generateRuns(path = None):
-	if path:
+def cacheBlocksWorld(blocksWorld, numberOfBlocks):
+	with open('./testdata/' + str(numberOfBlocks) + '_blocksworld.pkl', 'wb') as f:
+		pickle.dump(blocksWorld.allStates, f)
+
+def generateRuns(pathToBlocksWorld = None):
+	if pathToBlocksWorld:
 		print('Loading blocks world...')
-		blocksWorld = BlocksWorld(path)
+		blocksWorld = BlocksWorld(pathToBlocksWorld)
 	else:
 		print('Generating blocks world...')
 		blocksWorld = BlocksWorld()
-		with open('./testdata/' + str(num_blocks) + '_blocksworld.pkl', 'wb') as f:
-				pickle.dump(blocksWorld.allStates, f)
+		cacheBlocksWorld(blocksWorld, num_blocks)
 	print('Done!')
 
 	print('Generating runs...')
