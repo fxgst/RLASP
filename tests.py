@@ -11,7 +11,7 @@ from testparms import *
 test_name = str(num_blocks) + 'b_' + str(number_episodes) + 'e' + '_' + str(number_runs) + 'r'+ '_' + str(planning_factor) + 'pf' + ('_poep' if  plan_on_empty_policy else '') + (f'_{planning_horizon}phz' if (planning_factor != 0 or plan_on_empty_policy) else '')
 plot_every_n = int(number_episodes/plot_points)
 
-def plot(arr, every_n):
+def plot(plotname, arrays):
 	matplotlib.use('pgf')
 	matplotlib.rcParams.update({
 		'pgf.texsystem': 'pdflatex',
@@ -19,34 +19,53 @@ def plot(arr, every_n):
 		'text.usetex': True,
 		'pgf.rcfonts': False,
 	})
-	plt.plot(range(0, len(arr), every_n), arr[::every_n])
+
+	for arr in arrays:
+		plt.plot(range(0, len(arr[0]), plot_every_n), arr[0][::plot_every_n], '.', label=arr[1])
+
+	#plt.legend(loc="lower right")
+	plt.legend(bbox_to_anchor=(0, 0.93, 1, 0.2), loc="upper left", mode='expand', ncol=4)
+	plt.ylim(0, 1)
 	plt.ylabel('return ratio')
 	plt.xlabel('number of episodes')
-	plt.savefig('./testdata/' + test_name + '_' + mode + '.pgf')
-	plt.savefig('./testdata/' + test_name + '_' + mode + '.png', dpi=400)
+	plt.savefig('./testdata/' + plotname + '.pgf')
+	plt.savefig('./testdata/' + plotname + '.png', dpi=400)
 
-def generatePlots(): 
+def plotMultiple(plotname, filenames):
+	toPlot = []
+	for filename in filenames:
+		toPlot.append((loadPlotData(filename[0]), filename[1]))
+	plot(plotname, toPlot)
+
+def loadPlotData(filename): 
 	a = np.empty(number_runs, dtype=object)
 	for i in range(0, number_runs):
-		with open('./testdata/' + test_name + f'_{i}.pkl', 'rb') as f:
+		with open('./testdata/' + filename + f'_{i}.pkl', 'rb') as f:
 			a[i] = pickle.load(f)
 	
 	if mode == 'median':
 		result = [statistics.median(k) for k in zip(*a)]
-	else: 
+	else:
 		result = [statistics.mean(k) for k in zip(*a)]
 
-	plot(result, plot_every_n)
+	return result
 
-def generateRuns():
-	blocksWorld = BlocksWorld()
+def generateRuns(path = None):
+	if path:
+		print('Loading blocks world...')
+		blocksWorld = BlocksWorld(path)
+	else:
+		print('Generating blocks world...')
+		blocksWorld = BlocksWorld()
+		with open('./testdata/' + str(num_blocks) + '_blocksworld.pkl', 'wb') as f:
+				pickle.dump(blocksWorld.allStates, f)
+	print('Done!')
+
 	print('Generating runs...')
-
 	for i in range(0, number_runs):
 		print('Run ' + str(i))
 		mc = MonteCarlo(blocksWorld)
 		mc.learnPolicy(maxEpisodeLength=max_episode_len, gamma=1, numberEpisodes=number_episodes, planningFactor=planning_factor, planOnEmptyPolicy=plan_on_empty_policy, planningHorizon=planning_horizon)
-
 		with open('./testdata/' + test_name + f'_{i}.pkl', 'wb') as f:
 			pickle.dump(mc.returnRatios, f)
 
@@ -56,7 +75,7 @@ def testPolicy(policy, mc, maxEpisodeLength):
 	finalAction = Action('move(e,d)')
 	num_steps = []
 
-	for state in mc.allStates:
+	for state in mc.blocksWorld.allStates:
 		steps = mc.generateEpisode(state, policy, maxEpisodeLength, 0, False, 0, False, True)
 		if steps:
 			num_steps.append(len(steps))

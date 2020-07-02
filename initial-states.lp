@@ -1,7 +1,7 @@
-% generate all valid initial states for the blocks world with n blocks
+% enumerate all valid states for the blocks world given some blocks
 
 % input predicates ********************************************************************************
-block(a; b; c; d; e).
+block(a; b; c; d; e).%; f; g; h; i).%; j).
 % *************************************************************************************************
 
 % state/1 with state(X) if X is a term representation of a state predicate
@@ -12,7 +12,7 @@ location(table).
 location(X) :- block(X).
 
 % every block is placed on exactly one location
-{ on(X,L) : location(L), L <> X  } = 1  :- block(X).
+{ on(X,L) : location(L), L != X  } = 1  :- block(X).
 
 % there cannot be more than one block on any other block
 :- block(X), { on(Y,X) : block(Y) } > 1.

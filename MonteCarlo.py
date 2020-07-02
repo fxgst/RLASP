@@ -6,8 +6,9 @@ from collections import deque
 class MonteCarlo:
     def __init__(self, blocksWorld: BlocksWorld):
         self.blocksWorld = blocksWorld
-        self.allStates = self.blocksWorld.generateAllStates() # clingo IO
         self.returnRatios = []
+        self.Q = dict() # {state : {action : value}}
+
 
     # maxEpisodeLength should be at least 2*(n-1)
     def generateEpisode(self, state: State, policy: dict, maxEpisodeLength: int, planningFactor: float, planOnEmptyPolicy: bool, planningHorizon: int, exploringStarts: bool, onPolicy: bool) -> deque:
@@ -28,6 +29,13 @@ class MonteCarlo:
                     action = self.getRandomAction(actions)  
             else:
                 action = self.planAction(state, planningHorizon)
+                if state in policy:
+                    policyAction = policy[state]
+                    q_value_policy_action = self.Q[state][policyAction]
+                    q_value_planning_action = self.Q[state][action]
+
+                    if q_value_planning_action < q_value_policy_action:
+                        action = policyAction
 
             if action == None:
                 # goal reached
@@ -44,15 +52,14 @@ class MonteCarlo:
     def learnPolicy(self, maxEpisodeLength: int, gamma: float, numberEpisodes: int, planningFactor: float, planOnEmptyPolicy: bool, planningHorizon: int) -> dict:
         """ First-visit Exploring Starts Monte Carlo evaluation of policy P """
 
-        print('Initializing...')
-        Q = dict()        # {state : {action : average value}}
-        Visits = dict()   # {state : {action : number of experiences}}
-        P = dict()        # {state : action}
+        Visits = dict() # {state : {action : number of experiences}}
+        P = dict()      # {state : action}
 
         print('Learning...')
         for _ in range(0, numberEpisodes):
-            rnd = randint(0, len(self.allStates)-1)
-            startState = self.allStates[rnd]
+            rnd = randint(0, len(self.blocksWorld.allStates)-1)
+            startState = self.blocksWorld.allStates[rnd]
+            
             episode = self.generateEpisode(startState, P, maxEpisodeLength, planningFactor, planOnEmptyPolicy, planningHorizon, exploringStarts=True, onPolicy=True) # clingo IO
 
             g_return = 0
@@ -64,8 +71,8 @@ class MonteCarlo:
 
                 # return ratio for benchmarking
                 if t == 0:
-                    rewardRatio = self.calculateReturnRatio(startState, g_return, -(maxEpisodeLength+1)) # clingo IO
-                    self.returnRatios.append(rewardRatio)
+                    returnRatio = self.calculateReturnRatio(startState, g_return, -(maxEpisodeLength+1)) # clingo IO
+                    self.returnRatios.append(returnRatio)
 
                 firstVisit = True
                 for before_t in range(0, t):
@@ -74,20 +81,20 @@ class MonteCarlo:
                         break
 
                 if firstVisit:
-                    if state_t not in Q:
-                        Q[state_t] = dict()
+                    if state_t not in self.Q:
+                        self.Q[state_t] = dict()
                         Visits[state_t] = dict()
                         # initialize all possible actions in state_t with zero
-                        for a in self.getInitialActions(state_t):
+                        for a in self.getInitialActions(state_t): # clingo IO
                             Visits[state_t][a] = 0
-                            Q[state_t][a] = 0
+                            self.Q[state_t][a] = 0
 
                     # predict/evaluate: calculate average value for state-action pair
                     Visits[state_t][action_t] += 1
-                    Q[state_t][action_t] += (g_return - Q[state_t][action_t]) / Visits[state_t][action_t]
+                    self.Q[state_t][action_t] += (g_return - self.Q[state_t][action_t]) / Visits[state_t][action_t]
                     
                     # control/improve: use greedy exploration: choose action with highest return
-                    P[state_t] = self.greedyAction(Q[state_t].items(), action_t)
+                    P[state_t] = self.greedyAction(self.Q[state_t].items(), action_t)
         
         print('Done!')
         return P
@@ -122,5 +129,5 @@ class MonteCarlo:
         return bestAction
 
     def calculateReturnRatio(self, startState: State, episodeReward: float, minimalReward: float) -> float:
-        (_, _, _, _, maxReward) = self.blocksWorld.nextStep(startState, None, len(startState.locations)*2) # clingo IO
+        (_, _, _, _, maxReward) = self.blocksWorld.nextStep(startState, None, 2*(len(startState.locations)-1)) # clingo IO
         return (episodeReward - minimalReward) / (maxReward - minimalReward)

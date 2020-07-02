@@ -2,10 +2,16 @@ from ClingoBridge import *
 from random import randint
 from entities import *
 import numpy as np
+import pickle
 
 class BlocksWorld:
-    def __init__(self):
+    def __init__(self, path = None):
         self.clingo = ClingoBridge()
+        if path:
+            with open(path, 'rb') as f:
+                self.allStates = pickle.load(f)
+        else:
+            self.allStates = self.generateAllStates()
 
     def generateAllStates(self):
         self.clingo = ClingoBridge() # reset clingo
@@ -20,14 +26,6 @@ class BlocksWorld:
             states[i] = self.parseState(output[i])
 
         return states
-
-    def getRandomStartState(self) -> State:
-        self.clingo = ClingoBridge() # reset clingo
-        allStates = self.generateAllStates()
-
-        # choose random start state
-        rnd = randint(0, len(allStates)-1)
-        return allStates[rnd]
 
     def nextStep(self, state: State, action: Action, t):
         self.clingo = ClingoBridge() # reset clingo

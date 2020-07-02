@@ -1,23 +1,24 @@
 % MDP specification for the blocks world
 
 % input predicates ********************************************************************************
-% previous(X) ...	X is a term represenation of a state predicate, provided by BlocksWorld.py, optional
+% previous(X) ...	X is a term representation of a state predicate, provided by BlocksWorld.py, optional
 % action(X) ...  	X is term representation of an action that has been chosen, provided by BlocksWorld.py, optional
 % subgoal(X,Y) ... 	X is on top of Y in goal state
+% constant t representing the planning horizon
 
-subgoal(a, table). subgoal(b, a). subgoal(c, b). subgoal(d, c). subgoal(e, d).
+subgoal(a, table). subgoal(b, a). subgoal(c, b). subgoal(d, c). subgoal(e, d).% subgoal(f, e). subgoal(g, f). subgoal(h, g). subgoal(i, h).% subgoal(j, i).
 % *************************************************************************************************
 
 #defined action/1. % silence warning that action does not appear in rule head
 
-% executable(X) ... X is term represenation of an action that is executable in the follow-up state
+% executable(X) ... X is term representation of an action that is executable in the follow-up state
 executable(move(X,Y)) :- executable(X,Y,1), t > 0.
 executable(move(X,Y)) :- executable(X,Y,0), t = 0.
 
 on(X,Y,0) :- previous(on(X,Y)).
 move(X,Y,0) :- action(move(X,Y)).
 
-% state(X) ... X is a term represenation of a state predicate that holds in the follow-up state
+% state(X) ... X is a term representation of a state predicate that holds in the follow-up state
 state(on(X,Y)) :- on(X,Y,1).
 
 % nextReward(N) ... N is the reward the agents gets after performing a given action
@@ -35,7 +36,7 @@ goal(T) :- time(T), { not on(X,Y,T) : subgoal(X,Y) } = 0.
 reward(100,T) :- goal(T), not goal(T-1).        % big reward for reaching the goal the first time
 reward(-1,T)  :- move(_,_,T-1).                 % small penalty for each move
 
-% Alternatively, consider rewards for reaching subgoals and penalities for loosing them
+% Alternatively, consider rewards for reaching subgoals and penalties for loosing them
 %reward(100,T)  :- subgoal(X,Y), on(X,Y,T), not on(X,Y,T-1).    % reward for reaching a subgoal the first time
 %reward(-100,T) :- subgoal(X,Y), on(X,Y,T-1), not on(X,Y,T).    % penalty for loosing a subgoal
 %reward(-1,T)   :- move(_,_,T-1).                               % small penalty for each move
