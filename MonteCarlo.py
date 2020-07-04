@@ -57,9 +57,7 @@ class MonteCarlo:
 
         print('Learning...')
         for _ in range(0, numberEpisodes):
-            rnd = randint(0, len(self.blocksWorld.allStates)-1)
-            startState = self.blocksWorld.allStates[rnd]
-            
+            startState = self.blocksWorld.getRandomStartState()
             episode = self.generateEpisode(startState, P, maxEpisodeLength, planningFactor, planOnEmptyPolicy, planningHorizon, exploringStarts=True, onPolicy=True) # clingo IO
 
             g_return = 0

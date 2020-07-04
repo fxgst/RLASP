@@ -1,7 +1,7 @@
 % enumerate all valid states for the blocks world given some blocks
 
 % input predicates ********************************************************************************
-block(a; b; c; d; e).%; f; g; h; i).%; j).
+block(a; b; c; d; e; f; g; h; i; j; k; l).
 % *************************************************************************************************
 
 % state/1 with state(X) if X is a term representation of a state predicate
@@ -23,3 +23,4 @@ supported(X) :- on(X,Y), supported(Y).
 :- block(X), not supported(X).
 
 #show state/1.
+#show block/1.

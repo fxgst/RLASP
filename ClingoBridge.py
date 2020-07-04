@@ -11,8 +11,8 @@ class ClingoBridge:
     def addFile(self, path: str):
         self.ctl.load(path)
 
-    def run(self, programs: list):
-        self.ctl.configuration.solve.models = 0 # create all stable models
+    def run(self, programs: list, n: int = 0):
+        self.ctl.configuration.solve.models = n # create all stable models
         files = []
 
         # add programs to list of files for ASP program

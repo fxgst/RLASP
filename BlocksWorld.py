@@ -1,5 +1,5 @@
 from ClingoBridge import *
-from random import randint
+import random
 from entities import *
 import numpy as np
 import pickle
@@ -7,11 +7,19 @@ import pickle
 class BlocksWorld:
     def __init__(self, path = None):
         self.clingo = ClingoBridge()
-        if path:
+        self.blocks = self.getBlocks()
+        if path and len(self.blocks) < 10:
             with open(path, 'rb') as f:
                 self.allStates = pickle.load(f)
-        else:
+        elif len(self.blocks) < 10:
             self.allStates = self.generateAllStates()
+
+    def getRandomStartState(self):
+        if len(self.blocks) < 10:
+            rnd = random.randint(0, len(self.allStates)-1)
+            return self.allStates[rnd]
+        else:
+            return self.generateRandomStartState()
 
     def generateAllStates(self):
         self.clingo = ClingoBridge() # reset clingo
@@ -21,11 +29,50 @@ class BlocksWorld:
         self.clingo.run([base])
         output = self.clingo.output
 
-        states = np.full((len(output)), object)
-        for i in range(0, len(output)):
-            states[i] = self.parseState(output[i])
+        num_states = int(len(output)/2)
 
+        states = np.full(num_states, object)
+        for i in range(0, num_states):
+            state_atoms = []
+            for atom in output[i]:
+                if atom.name == 'state':
+                    state_atoms.append(atom)
+            states[i] = self.parseState(state_atoms)
         return states
+
+    def generateRandomStartState(self):
+        partStates = []
+        random.shuffle(self.blocks)
+        placed = []
+        t = 0
+
+        for block in self.blocks:
+            if (1/(t+1) >= random.random()):
+                partStates.append(PartState(f'on({block.arguments[0]},table)'))
+            else:
+                rand = random.randint(0, len(placed)-1)
+                partStates.append(PartState(f'on({block.arguments[0]},{placed[rand]})'))
+            
+            placed.append(block.arguments[0])
+            t += 1
+        
+        return State(set(partStates))
+
+    def getBlocks(self):
+        self.clingo = ClingoBridge() # reset clingo
+
+        base = ('base', '')
+        self.clingo.addFile('initial-states.lp')
+        self.clingo.run([base], n=1)
+        output = self.clingo.output[0]
+
+        num_blocks = int(len(output)/2)
+        blocks = []
+        for atom in output:
+            if atom.name == 'block':
+                blocks.append(atom)
+
+        return blocks
 
     def nextStep(self, state: State, action: Action, t):
         self.clingo = ClingoBridge() # reset clingo

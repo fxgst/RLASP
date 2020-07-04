@@ -49,8 +49,9 @@ def loadPlotData(filename):
 	return result
 
 def cacheBlocksWorld(blocksWorld, numberOfBlocks):
-	with open('./testdata/' + str(numberOfBlocks) + '_blocksworld.pkl', 'wb') as f:
-		pickle.dump(blocksWorld.allStates, f)
+	if numberOfBlocks < 10:
+		with open('./testdata/' + str(numberOfBlocks) + '_blocksworld.pkl', 'wb') as f:
+			pickle.dump(blocksWorld.allStates, f)
 
 def generateRuns(pathToBlocksWorld = None):
 	if pathToBlocksWorld:
@@ -72,8 +73,9 @@ def generateRuns(pathToBlocksWorld = None):
 
 # test whether goal can be reached from all start states
 def testPolicy(policy, mc, maxEpisodeLength):
-	finalState = State({PartState('on(a,table)'),PartState('on(b,a)'), PartState('on(c,b)'), PartState('on(d,c)'), PartState('on(e,table)')})
-	finalAction = Action('move(e,d)')
+	#finalState = State({PartState('on(a,table)'),PartState('on(b,a)'), PartState('on(c,b)'), PartState('on(d,c)'), PartState('on(e,table)')})
+	finalState = State({PartState('on(a,table)'), PartState('on(b,a)'), PartState('on(c,b)'), PartState('on(d,c)'), PartState('on(e,d)'), PartState('on(f,e)'), PartState('on(g,f)'), PartState('on(h,g)'), PartState('on(i,h)'), PartState('on(j,table)')})
+	finalAction = Action('move(j,i)')#Action('move(e,d)')
 	num_steps = []
 
 	for state in mc.blocksWorld.allStates:
