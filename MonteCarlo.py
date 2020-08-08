@@ -3,45 +3,46 @@ from entities import State
 from random import randint, random
 from collections import deque
 
+
 class MonteCarlo:
-    def __init__(self, blocksWorld: BlocksWorld):
-        self.blocksWorld = blocksWorld
+    def __init__(self, blocks_world: BlocksWorld):
+        self.blocksWorld = blocks_world
         self.returnRatios = []
-        self.Q = dict() # {state : {action : value}}
+        self.Q = dict()  # {state : {action : value}}
 
-
-    # maxEpisodeLength should be at least 2*(n-1)
-    def generateEpisode(self, state: State, policy: dict, maxEpisodeLength: int, planningFactor: float, planOnEmptyPolicy: bool, planningHorizon: int, exploringStarts: bool, onPolicy: bool) -> deque:
-        episode = deque() # deque allows much faster appending than array
-        actions = self.getInitialActions(state) # clingo IO
+    # max_episode_length should be at least 2*(n-1)
+    def generate_episode(self, state: State, policy: dict, max_episode_length: int, planning_factor: float,
+                         plan_on_empty_policy: bool, planning_horizon: int, exploring_starts: bool, on_policy: bool) -> deque:
+        episode = deque()  # deque allows much faster appending than array
+        actions = self.get_initial_actions(state)  # clingo IO
 
         count = 0
-        while count <= maxEpisodeLength:
-            if planningFactor <= random():
-                if (state in policy) and onPolicy:
-                    if exploringStarts and count == 0:
-                        action = self.getRandomAction(actions)
+        while count <= max_episode_length:
+            if planning_factor <= random():
+                if (state in policy) and on_policy:
+                    if exploring_starts and count == 0:
+                        action = self.get_random_action(actions)
                     else:
                         action = policy[state]
-                elif planOnEmptyPolicy:
-                    action = self.planAction(state, planningHorizon)
+                elif plan_on_empty_policy:
+                    action = self.plan_action(state, planning_horizon)
                 else:
-                    action = self.getRandomAction(actions)  
+                    action = self.get_random_action(actions)
             else:
-                action = self.planAction(state, planningHorizon)
+                action = self.plan_action(state, planning_horizon)
                 if state in policy:
-                    policyAction = policy[state]
-                    q_value_policy_action = self.Q[state][policyAction]
+                    policy_action = policy[state]
+                    q_value_policy_action = self.Q[state][policy_action]
                     q_value_planning_action = self.Q[state][action]
 
                     if q_value_planning_action < q_value_policy_action:
-                        action = policyAction
+                        action = policy_action
 
-            if action == None:
+            if action is None:
                 # goal reached
                 break
 
-            (nextState, nextActions, _, nextReward, _) = self.blocksWorld.nextStep(state, action, t=1) # clingo IO
+            (nextState, nextActions, _, nextReward, _) = self.blocksWorld.next_step(state, action, t=1)  # clingo IO
             episode.append((state, nextReward, action))
             state = nextState
             actions = nextActions
@@ -49,19 +50,21 @@ class MonteCarlo:
 
         return episode
 
-    def learnPolicy(self, maxEpisodeLength: int, gamma: float, numberEpisodes: int, planningFactor: float, planOnEmptyPolicy: bool, planningHorizon: int) -> dict:
+    def learn_policy(self, max_episode_length: int, gamma: float, number_episodes: int, planning_factor: float,
+                     plan_on_empty_policy: bool, planning_horizon: int) -> dict:
         """ First-visit Exploring Starts Monte Carlo evaluation of policy P """
 
-        Visits = dict() # {state : {action : number of experiences}}
-        P = dict()      # {state : action}
+        Visits = dict()  # {state : {action : number of experiences}}
+        P = dict()  # {state : action}
 
         print('Learning...')
-        for _ in range(0, numberEpisodes):
-            startState = self.blocksWorld.getRandomStartState()
-            episode = self.generateEpisode(startState, P, maxEpisodeLength, planningFactor, planOnEmptyPolicy, planningHorizon, exploringStarts=True, onPolicy=True) # clingo IO
+        for _ in range(0, number_episodes):
+            start_state = self.blocksWorld.get_random_start_state()
+            episode = self.generate_episode(start_state, P, max_episode_length, planning_factor, plan_on_empty_policy,
+                                            planning_horizon, exploring_starts=True, on_policy=True)  # clingo IO
 
             g_return = 0
-            for t in range(len(episode)-1, 0-1, -1):
+            for t in range(len(episode) - 1, 0 - 1, -1):
                 g_return = gamma * g_return + episode[t][1]
 
                 state_t = episode[t][0]
@@ -69,63 +72,64 @@ class MonteCarlo:
 
                 # return ratio for benchmarking
                 if t == 0:
-                    returnRatio = self.calculateReturnRatio(startState, g_return, -(maxEpisodeLength+1)) # clingo IO
-                    self.returnRatios.append(returnRatio)
+                    return_ratio = self.calculate_return_ratio(start_state, g_return, -(max_episode_length + 1))  # clingo IO
+                    self.returnRatios.append(return_ratio)
 
-                firstVisit = True
+                is_first_visit = True
                 for before_t in range(0, t):
                     if episode[before_t][0] == state_t and episode[before_t][2] == action_t:
-                        firstVisit = False
+                        is_first_visit = False
                         break
 
-                if firstVisit:
+                if is_first_visit:
                     if state_t not in self.Q:
                         self.Q[state_t] = dict()
                         Visits[state_t] = dict()
                         # initialize all possible actions in state_t with zero
-                        for a in self.getInitialActions(state_t): # clingo IO
+                        for a in self.get_initial_actions(state_t):  # clingo IO
                             Visits[state_t][a] = 0
                             self.Q[state_t][a] = 0
 
                     # predict/evaluate: calculate average value for state-action pair
                     Visits[state_t][action_t] += 1
                     self.Q[state_t][action_t] += (g_return - self.Q[state_t][action_t]) / Visits[state_t][action_t]
-                    
+
                     # control/improve: use greedy exploration: choose action with highest return
-                    P[state_t] = self.greedyAction(self.Q[state_t].items(), action_t)
-        
+                    P[state_t] = self.greedy_action(self.Q[state_t].items(), action_t)
+
         print('Done!')
         return P
 
     # auxiliary methods
 
-    def greedyAction(self, actions, action_t):
+    def greedy_action(self, actions, action_t):
         best_action = action_t
-        argMax = -100000
+        arg_max = -100000
         for action, value in actions:
-            if value == argMax and randint(0,1) == 1:
+            if value == arg_max and randint(0, 1) == 1:
                 best_action = action
-            elif value > argMax:
-                argMax = value
+            elif value > arg_max:
+                arg_max = value
                 best_action = action
 
         return best_action
 
-    def getInitialActions(self, state: State) -> list:
-        (_, availableActions, _, _, _) = self.blocksWorld.nextStep(state, None, t=0) # clingo IO   
+    def get_initial_actions(self, state: State) -> list:
+        (_, availableActions, _, _, _) = self.blocksWorld.next_step(state, None, t=0)  # clingo IO
         return availableActions
 
-    def getRandomAction(self, actions: list):
+    def get_random_action(self, actions: list):
         if len(actions) > 0:
-            rnd = randint(0, len(actions)-1)
+            rnd = randint(0, len(actions) - 1)
             return actions[rnd]
         return None
 
-    def planAction(self, state, planningHorizon):
+    def plan_action(self, state, planning_horizon):
         # plan and choose action according to planning component
-        (_, _, bestAction, _, _) = self.blocksWorld.nextStep(state, None, t=planningHorizon) # clingo IO
+        (_, _, bestAction, _, _) = self.blocksWorld.next_step(state, None, t=planning_horizon)  # clingo IO
         return bestAction
 
-    def calculateReturnRatio(self, startState: State, episodeReward: float, minimalReward: float) -> float:
-        (_, _, _, _, maxReward) = self.blocksWorld.nextStep(startState, None, 2*(len(startState.locations)-1)) # clingo IO
-        return (episodeReward - minimalReward) / (maxReward - minimalReward)
+    def calculate_return_ratio(self, start_state: State, episode_reward: float, minimal_reward: float) -> float:
+        (_, _, _, _, maxReward) = self.blocksWorld.next_step(start_state, None,
+                                                             2 * (len(start_state.locations) - 1))  # clingo IO
+        return (episode_reward - minimal_reward) / (maxReward - minimal_reward)
