@@ -6,6 +6,16 @@ from collections import deque
 
 class MonteCarlo:
     def __init__(self, blocks_world: BlocksWorld, max_episode_length: int, planning_factor: float, plan_on_empty_policy: bool, planning_horizon: int, exploring_starts: bool = True, on_policy: bool = True):
+        """Sets all required properties for the learning process.
+
+        :param blocks_world: the blocks world
+        :param max_episode_length: the maximum number of steps in an episode, should be at least 2*(n-1), n = number of blocks
+        :param planning_factor: the probability for invoking the planning component at each step
+        :param plan_on_empty_policy: enable/disable the use of planning on an empty policy entry
+        :param planning_horizon: how far to plan ahead
+        :param exploring_starts: enable/disable exploring starts
+        :param on_policy: enable/disable on-policy behavior
+        """
         self.blocks_world = blocks_world
         self.max_episode_length = max_episode_length
         self.planning_factor = planning_factor
@@ -16,9 +26,14 @@ class MonteCarlo:
         self.return_ratios = []
         self.Q = dict()  # {state : {action : value}}
 
-    # max_episode_length should be at least 2*(n-1)
     def generate_episode(self, state: State, policy: dict) -> deque:
-        episode = deque()  # deque allows much faster appending than array
+        """Generates a single episode from a start state onwards.
+
+        :param state: the initial state
+        :param policy: the current policy
+        :return: a sequence of state, reward, action
+        """
+        episode = deque()  # deque allows faster appending than array
         actions = self.get_initial_actions(state)  # clingo IO
 
         count = 0
@@ -56,7 +71,12 @@ class MonteCarlo:
         return episode
 
     def learn_policy(self, gamma: float, number_episodes: int) -> dict:
-        """ First-visit Exploring Starts Monte Carlo evaluation of policy P """
+        """Uses a first-visit Exploring Starts Monte Carlo evaluation method to evaluate policy P.
+
+        :param gamma: the discounting factor (use only when no planning is used; set to 1 if planning is used)
+        :param number_episodes: the number of episodes to run
+        :return: the learned policy as a state-action mapping
+        """
 
         Visits = dict()  # {state : {action : number of experiences}}
         P = dict()  # {state : action}
@@ -105,7 +125,13 @@ class MonteCarlo:
 
     # auxiliary methods
 
-    def greedy_action(self, actions, action_t):
+    def greedy_action(self, actions: dict, action_t: Action) -> Action:
+        """Chooses the action with the highest value.
+
+        :param actions: action-value pairs
+        :param action_t: the action that happened at time t
+        :return: the action with highest value, ties broken arbitrarily
+        """
         best_action = action_t
         arg_max = -100000
         for action, value in actions:
@@ -118,21 +144,42 @@ class MonteCarlo:
         return best_action
 
     def get_initial_actions(self, state: State) -> list:
+        """Retrieves the applicable actions for a given state.
+
+        :param state: the current state
+        :return: a list of applicable actions in that state
+        """
         (_, availableActions, _, _, _) = self.blocks_world.next_step(state, None, t=0)  # clingo IO
         return availableActions
 
-    def get_random_action(self, actions: list):
+    def get_random_action(self, actions: list) -> Action:
+        """Picks a random action from a list of actions.
+
+        :param actions: a list of possible actions
+        :return: a random action
+        """
         if len(actions) > 0:
             rnd = randint(0, len(actions) - 1)
             return actions[rnd]
         return None
 
-    def plan_action(self, state, planning_horizon):
-        # plan and choose action according to planning component
+    def plan_action(self, state: State, planning_horizon: int) -> Action:
+        """Getting an action recommended by the planning component.
+
+        :param state: the current state
+        :param planning_horizon: how many steps to plan ahead
+        :return: an action recommended by the planning component
+        """
         (_, _, bestAction, _, _) = self.blocks_world.next_step(state, None, t=planning_horizon)  # clingo IO
         return bestAction
 
     def calculate_return_ratio(self, start_state: State, episode_reward: float, minimal_reward: float) -> float:
-        (_, _, _, _, maxReward) = self.blocks_world.next_step(start_state, None,
-                                                              2 * (len(start_state.locations) - 1))  # clingo IO
+        """Calculates the return ratio of an episode.
+
+        :param start_state: the initial state
+        :param episode_reward: the actual reward achieved during that episode
+        :param minimal_reward: the minimal reward the agent can achieve during an episode
+        :return: the return ratio
+        """
+        (_, _, _, _, maxReward) = self.blocks_world.next_step(start_state, None, 2 * (len(start_state.locations) - 1))  # clingo IO
         return (episode_reward - minimal_reward) / (maxReward - minimal_reward)

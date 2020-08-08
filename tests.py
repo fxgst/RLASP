@@ -79,6 +79,15 @@ def generate_runs(path_to_blocks_world=None):
 
 # test whether goal can be reached from all start states
 def test_policy(policy, blocks_world, max_episode_length):
+    """Test a given policy whether the goal state can be reached from each starting state.
+    For each state, a check will be printed if the goal state was reachable from that state, a cross otherwise.
+    Note that this test is tailored for a blocks world of size 4, if other blocks worlds should be tested,
+    the final_state and final_action fields have to be updated accordingly.
+
+    :param policy: the policy to be evaluated
+    :param blocks_world: a blocks world
+    :param max_episode_length: the maximum number of steps before the test for that particular start state gets aborted
+    """
     final_state = State({PartState('on(a,table)'), PartState('on(b,a)'), PartState('on(c,b)'), PartState('on(d,table)')})
     # final_state = State({PartState('on(a,table)'), PartState('on(b,a)'), PartState('on(c,b)'), PartState('on(d,c)'), PartState('on(e,d)'), PartState('on(f,e)'), PartState('on(g,f)'), PartState('on(h,g)'), PartState('on(i,h)'), PartState('on(j,table)')})
     final_action = Action('move(d,c)')
