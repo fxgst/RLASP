@@ -6,7 +6,7 @@
 % subgoal(X,Y) ... 	X is on top of Y in goal state
 % constant t representing the planning horizon
 
-subgoal(a, table). subgoal(b, a). subgoal(c, b). subgoal(d, c). subgoal(e, d). subgoal(f, e). subgoal(g, f).% subgoal(h, g). subgoal(i, h). subgoal(j, i). subgoal(k, j). subgoal(l, k).
+subgoal(a, table). subgoal(b, a). subgoal(c, b). subgoal(d, c).% subgoal(e, d). subgoal(f, e). subgoal(g, f). subgoal(h, g). subgoal(i, h). subgoal(j, i). subgoal(k, j). subgoal(l, k).
 % *************************************************************************************************
 
 #defined action/1. % silence warning that action does not appear in rule head

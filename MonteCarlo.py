@@ -5,31 +5,36 @@ from collections import deque
 
 
 class MonteCarlo:
-    def __init__(self, blocks_world: BlocksWorld):
-        self.blocksWorld = blocks_world
-        self.returnRatios = []
+    def __init__(self, blocks_world: BlocksWorld, max_episode_length: int, planning_factor: float, plan_on_empty_policy: bool, planning_horizon: int, exploring_starts: bool = True, on_policy: bool = True):
+        self.blocks_world = blocks_world
+        self.max_episode_length = max_episode_length
+        self.planning_factor = planning_factor
+        self.plan_on_empty_policy = plan_on_empty_policy
+        self.planning_horizon = planning_horizon
+        self.exploring_starts = exploring_starts
+        self.on_policy = on_policy
+        self.return_ratios = []
         self.Q = dict()  # {state : {action : value}}
 
     # max_episode_length should be at least 2*(n-1)
-    def generate_episode(self, state: State, policy: dict, max_episode_length: int, planning_factor: float,
-                         plan_on_empty_policy: bool, planning_horizon: int, exploring_starts: bool, on_policy: bool) -> deque:
+    def generate_episode(self, state: State, policy: dict) -> deque:
         episode = deque()  # deque allows much faster appending than array
         actions = self.get_initial_actions(state)  # clingo IO
 
         count = 0
-        while count <= max_episode_length:
-            if planning_factor <= random():
-                if (state in policy) and on_policy:
-                    if exploring_starts and count == 0:
+        while count <= self.max_episode_length:
+            if self.planning_factor <= random():
+                if (state in policy) and self.on_policy:
+                    if self.exploring_starts and count == 0:
                         action = self.get_random_action(actions)
                     else:
                         action = policy[state]
-                elif plan_on_empty_policy:
-                    action = self.plan_action(state, planning_horizon)
+                elif self.plan_on_empty_policy:
+                    action = self.plan_action(state, self.planning_horizon)
                 else:
                     action = self.get_random_action(actions)
             else:
-                action = self.plan_action(state, planning_horizon)
+                action = self.plan_action(state, self.planning_horizon)
                 if state in policy:
                     policy_action = policy[state]
                     q_value_policy_action = self.Q[state][policy_action]
@@ -42,7 +47,7 @@ class MonteCarlo:
                 # goal reached
                 break
 
-            (nextState, nextActions, _, nextReward, _) = self.blocksWorld.next_step(state, action, t=1)  # clingo IO
+            (nextState, nextActions, _, nextReward, _) = self.blocks_world.next_step(state, action, t=1)  # clingo IO
             episode.append((state, nextReward, action))
             state = nextState
             actions = nextActions
@@ -50,8 +55,7 @@ class MonteCarlo:
 
         return episode
 
-    def learn_policy(self, max_episode_length: int, gamma: float, number_episodes: int, planning_factor: float,
-                     plan_on_empty_policy: bool, planning_horizon: int) -> dict:
+    def learn_policy(self, gamma: float, number_episodes: int) -> dict:
         """ First-visit Exploring Starts Monte Carlo evaluation of policy P """
 
         Visits = dict()  # {state : {action : number of experiences}}
@@ -59,9 +63,8 @@ class MonteCarlo:
 
         print('Learning...')
         for _ in range(0, number_episodes):
-            start_state = self.blocksWorld.get_random_start_state()
-            episode = self.generate_episode(start_state, P, max_episode_length, planning_factor, plan_on_empty_policy,
-                                            planning_horizon, exploring_starts=True, on_policy=True)  # clingo IO
+            start_state = self.blocks_world.get_random_start_state()
+            episode = self.generate_episode(start_state, P)  # clingo IO
 
             g_return = 0
             for t in range(len(episode) - 1, 0 - 1, -1):
@@ -72,8 +75,8 @@ class MonteCarlo:
 
                 # return ratio for benchmarking
                 if t == 0:
-                    return_ratio = self.calculate_return_ratio(start_state, g_return, -(max_episode_length + 1))  # clingo IO
-                    self.returnRatios.append(return_ratio)
+                    return_ratio = self.calculate_return_ratio(start_state, g_return, -(self.max_episode_length + 1))  # clingo IO
+                    self.return_ratios.append(return_ratio)
 
                 is_first_visit = True
                 for before_t in range(0, t):
@@ -115,7 +118,7 @@ class MonteCarlo:
         return best_action
 
     def get_initial_actions(self, state: State) -> list:
-        (_, availableActions, _, _, _) = self.blocksWorld.next_step(state, None, t=0)  # clingo IO
+        (_, availableActions, _, _, _) = self.blocks_world.next_step(state, None, t=0)  # clingo IO
         return availableActions
 
     def get_random_action(self, actions: list):
@@ -126,10 +129,10 @@ class MonteCarlo:
 
     def plan_action(self, state, planning_horizon):
         # plan and choose action according to planning component
-        (_, _, bestAction, _, _) = self.blocksWorld.next_step(state, None, t=planning_horizon)  # clingo IO
+        (_, _, bestAction, _, _) = self.blocks_world.next_step(state, None, t=planning_horizon)  # clingo IO
         return bestAction
 
     def calculate_return_ratio(self, start_state: State, episode_reward: float, minimal_reward: float) -> float:
-        (_, _, _, _, maxReward) = self.blocksWorld.next_step(start_state, None,
-                                                             2 * (len(start_state.locations) - 1))  # clingo IO
+        (_, _, _, _, maxReward) = self.blocks_world.next_step(start_state, None,
+                                                              2 * (len(start_state.locations) - 1))  # clingo IO
         return (episode_reward - minimal_reward) / (maxReward - minimal_reward)

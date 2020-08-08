@@ -1,10 +1,6 @@
-from entities import *
 import matplotlib
 import matplotlib.pyplot as plt
 import statistics
-import pickle
-import numpy as np
-from BlocksWorld import *
 from MonteCarlo import *
 from testparms import *
 
@@ -14,7 +10,7 @@ test_name = str(num_blocks) + 'b_' + str(number_episodes) + 'e' + '_' + str(numb
 plot_every_n = int(number_episodes / plot_points)
 
 
-def plot(plotname, arrays):
+def plot(plot_name, arrays):
     matplotlib.use('pgf')
     matplotlib.rcParams.update({
         'pgf.texsystem': 'pdflatex',
@@ -29,24 +25,24 @@ def plot(plotname, arrays):
     plt.ylim(0, 1)
     plt.ylabel('return ratio')
     plt.xlabel('number of episodes')
-    plt.savefig('./testdata/' + plotname + '.pgf')
-    plt.savefig('./testdata/' + plotname + '.png', dpi=400)
+    plt.savefig('./testdata/' + plot_name + '.pgf')
+    plt.savefig('./testdata/' + plot_name + '.png', dpi=400)
 
 
-def plotMultiple(plotname, filenames):
-    toPlot = []
+def plot_multiple(plot_name, filenames):
+    to_plot = []
     for filename in filenames:
-        toPlot.append((loadPlotData(filename[0]), filename[1]))
-    plot(plotname, toPlot)
+        to_plot.append((load_plot_data(filename[0]), filename[1]))
+    plot(plot_name, to_plot)
 
 
-def loadPlotData(filename):
+def load_plot_data(filename):
     a = np.empty(number_runs, dtype=object)
     for i in range(0, number_runs):
         try:
             with open('./testdata/' + filename + f'_{i}.pkl', 'rb') as f:
                 a[i] = pickle.load(f)
-        except:
+        except FileNotFoundError:
             print(filename + ' not found')
             pass
 
@@ -58,47 +54,45 @@ def loadPlotData(filename):
     return result
 
 
-def cacheBlocksWorld(blocksWorld, numberOfBlocks):
-    if numberOfBlocks < 10:
-        with open('./testdata/' + str(numberOfBlocks) + '_blocksworld.pkl', 'wb') as f:
-            pickle.dump(blocksWorld.allStates, f)
+def cache_blocks_world(blocks_world, number_of_blocks):
+    if number_of_blocks < 10:
+        with open('./testdata/' + str(number_of_blocks) + '_blocksworld.pkl', 'wb') as f:
+            pickle.dump(blocks_world.allStates, f)
 
 
-def generateRuns(pathToBlocksWorld=None):
-    if pathToBlocksWorld:
+def generate_runs(path_to_blocks_world=None):
+    if path_to_blocks_world:
         print('Loading blocks world...')
-        blocksWorld = BlocksWorld(pathToBlocksWorld)
+        blocks_world = BlocksWorld(path_to_blocks_world)
     else:
         print('Generating blocks world...')
-        blocksWorld = BlocksWorld()
-        cacheBlocksWorld(blocksWorld, num_blocks)
+        blocks_world = BlocksWorld()
+        cache_blocks_world(blocks_world, num_blocks)
     print('Done!')
 
     print('Generating runs...')
     for i in range(0, number_runs):
         print('Run ' + str(i))
-        mc = MonteCarlo(blocksWorld)
-        mc.learn_policy(max_episode_length=max_episode_len, gamma=1, number_episodes=number_episodes,
-                        planning_factor=planning_factor, plan_on_empty_policy=plan_on_empty_policy,
-                        planning_horizon=planning_horizon)
+        mc = MonteCarlo(blocks_world)
+        mc.learn_policy(max_episode_len, 1, number_episodes, planning_factor, plan_on_empty_policy, planning_horizon)
         with open('./testdata/' + test_name + f'_{i + 10}.pkl', 'wb') as f:
-            pickle.dump(mc.returnRatios, f)
+            pickle.dump(mc.return_ratios, f)
 
 
 # test whether goal can be reached from all start states
-def testPolicy(policy, mc, maxEpisodeLength):
-    finalState = State({PartState('on(a,table)'), PartState('on(b,a)'), PartState('on(c,b)'), PartState(
-        'on(d,table)')})  # , PartState('on(e,d)'), PartState('on(f,table)')})#, PartState('on(e,table)')})
-    # finalState = State({PartState('on(a,table)'), PartState('on(b,a)'), PartState('on(c,b)'), PartState('on(d,c)'), PartState('on(e,d)'), PartState('on(f,e)'), PartState('on(g,f)'), PartState('on(h,g)'), PartState('on(i,h)'), PartState('on(j,table)')})
-    finalAction = Action('move(d,c)')  # Action('move(j,i)')#
+def test_policy(policy, blocks_world, max_episode_length):
+    final_state = State({PartState('on(a,table)'), PartState('on(b,a)'), PartState('on(c,b)'), PartState('on(d,table)')})
+    # final_state = State({PartState('on(a,table)'), PartState('on(b,a)'), PartState('on(c,b)'), PartState('on(d,c)'), PartState('on(e,d)'), PartState('on(f,e)'), PartState('on(g,f)'), PartState('on(h,g)'), PartState('on(i,h)'), PartState('on(j,table)')})
+    final_action = Action('move(d,c)')
     num_steps = []
+    mc = MonteCarlo(blocks_world, max_episode_length, 0, False, 0, False, True)
 
-    for state in mc.blocksWorld.allStates:
-        steps = mc.generate_episode(state, policy, maxEpisodeLength, 0, False, 0, False, True)
+    for state in blocks_world.allStates:
+        steps = mc.generate_episode(state, policy)
         if steps:
             num_steps.append(len(steps))
             (s, _, a) = steps.pop()  # final step
-            if s == finalState and a == finalAction:
+            if s == final_state and a == final_action:
                 print(f'{str(state):<80} {"✅":>1}')
             else:
                 print(f'{str(state):<80} {"❌":>1}')
