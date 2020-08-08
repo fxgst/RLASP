@@ -12,7 +12,7 @@ Hyperparameters can be set in `main.py`, specifically at the `mc` variable.
 You can add as many blocks and define the goal state as you wish in `*.lp`, but performance might decrease as more blocks are used.
 
 ## Reference
-To read the full reference and theoretical backgrounds, download the full [thesis][thesis].
+To read the full reference and theoretical backgrounds, take a look and download the [thesis][thesis].
 
 [potassco]: https://potassco.org
 [clingo_python_api]: https://potassco.org/clingo/#packages
