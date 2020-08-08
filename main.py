@@ -12,10 +12,10 @@ from MonteCarlo import *
 #plot_multiple('plot_Nb_2000e_20r_0pf_poep_N-1phz', [('8b_2000e_20r_0pf_poep_7phz', '8b, pH=7'), ('9b_2000e_20r_0pf_poep_8phz', '9b, pH=8'), ('10b_2000e_20r_0pf_poep_9phz', '10b, pH=9'), ('12b_2000e_20r_0pf_poep_11phz', '12b, pH=11')])
 
 ### testing #####################################
-blocks_world = BlocksWorld()
-mc = MonteCarlo(blocks_world, max_episode_length=8, planning_factor=0, plan_on_empty_policy=False, planning_horizon=0)
-learned_policy = mc.learn_policy(gamma=1, number_episodes=100) # {state : action}
-print('Learned policy: %s' % learned_policy)
-print()
+# blocks_world = BlocksWorld()
+# mc = MonteCarlo(blocks_world, max_episode_length=8, planning_factor=0, plan_on_empty_policy=False, planning_horizon=0)
+# learned_policy = mc.learn_policy(gamma=1, number_episodes=100) # {state : action}
+# print('Learned policy: %s' % learned_policy)
+# print()
 
-test_policy(learned_policy, blocks_world, 8)
+# test_policy(learned_policy, blocks_world, 8)

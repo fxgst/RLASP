@@ -4,11 +4,9 @@ import statistics
 from MonteCarlo import *
 from testparms import *
 
-test_name = str(num_blocks) + 'b_' + str(number_episodes) + 'e' + '_' + str(number_runs + 10) + 'r' + '_' + str(
-    planning_factor) + 'pf' + ('_poep' if plan_on_empty_policy else '') + (
-                f'_{planning_horizon}phz' if (planning_factor != 0 or plan_on_empty_policy) else '')
+test_name = str(num_blocks) + 'b_' + str(number_episodes) + 'e' + '_' + str(number_runs + 10) + 'r' + '_' + str(planning_factor) + 'pf' + ('_poep' if plan_on_empty_policy else '') + (f'_{planning_horizon}phz' if (planning_factor != 0 or plan_on_empty_policy) else '')
 plot_every_n = int(number_episodes / plot_points)
-
+test_data_path = './testdata/'
 
 def plot(plot_name, arrays):
     matplotlib.use('pgf')
@@ -25,8 +23,8 @@ def plot(plot_name, arrays):
     plt.ylim(0, 1)
     plt.ylabel('return ratio')
     plt.xlabel('number of episodes')
-    plt.savefig('./testdata/' + plot_name + '.pgf')
-    plt.savefig('./testdata/' + plot_name + '.png', dpi=400)
+    plt.savefig(test_data_path + plot_name + '.pgf')
+    plt.savefig(test_data_path + plot_name + '.png', dpi=400)
 
 
 def plot_multiple(plot_name, filenames):
@@ -40,7 +38,7 @@ def load_plot_data(filename):
     a = np.empty(number_runs, dtype=object)
     for i in range(0, number_runs):
         try:
-            with open('./testdata/' + filename + f'_{i}.pkl', 'rb') as f:
+            with open(test_data_path + filename + f'_{i}.pkl', 'rb') as f:
                 a[i] = pickle.load(f)
         except FileNotFoundError:
             print(filename + ' not found')
@@ -56,7 +54,7 @@ def load_plot_data(filename):
 
 def cache_blocks_world(blocks_world, number_of_blocks):
     if number_of_blocks < 10:
-        with open('./testdata/' + str(number_of_blocks) + '_blocksworld.pkl', 'wb') as f:
+        with open(test_data_path + str(number_of_blocks) + '_blocksworld.pkl', 'wb') as f:
             pickle.dump(blocks_world.allStates, f)
 
 
@@ -73,9 +71,9 @@ def generate_runs(path_to_blocks_world=None):
     print('Generating runs...')
     for i in range(0, number_runs):
         print('Run ' + str(i))
-        mc = MonteCarlo(blocks_world)
-        mc.learn_policy(max_episode_len, 1, number_episodes, planning_factor, plan_on_empty_policy, planning_horizon)
-        with open('./testdata/' + test_name + f'_{i + 10}.pkl', 'wb') as f:
+        mc = MonteCarlo(blocks_world, max_episode_length, planning_factor, plan_on_empty_policy, planning_horizon)
+        mc.learn_policy(1, number_episodes)
+        with open(test_data_path + test_name + f'_{i}.pkl', 'wb') as f:
             pickle.dump(mc.return_ratios, f)
 
 
@@ -99,4 +97,4 @@ def test_policy(policy, blocks_world, max_episode_length):
         else:
             print(f'{str(state):<80} {"✅":>1}')  # empty episode means start == goal
 
-    print('Avg steps: ' + str(sum(num_steps) / len(num_steps)))
+    print('Average steps: ' + str(sum(num_steps) / len(num_steps)))
