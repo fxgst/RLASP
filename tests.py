@@ -8,6 +8,7 @@ test_name = str(num_blocks) + 'b_' + str(number_episodes) + 'e' + '_' + str(numb
 plot_every_n = int(number_episodes / plot_points)
 test_data_path = './testdata/'
 
+
 def plot(plot_name, arrays):
     matplotlib.use('pgf')
     matplotlib.rcParams.update({
@@ -77,9 +78,8 @@ def generate_runs(path_to_blocks_world=None):
             pickle.dump(mc.return_ratios, f)
 
 
-# test whether goal can be reached from all start states
 def test_policy(policy, blocks_world, max_episode_length):
-    """Test a given policy whether the goal state can be reached from each starting state.
+    """Test whether the goal state can be reached from each starting state for a given policy.
     For each state, a check will be printed if the goal state was reachable from that state, a cross otherwise.
     Note that this test is tailored for a blocks world of size 4, if other blocks worlds should be tested,
     the final_state and final_action fields have to be updated accordingly.

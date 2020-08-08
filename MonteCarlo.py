@@ -123,8 +123,6 @@ class MonteCarlo:
         print('Done!')
         return P
 
-    # auxiliary methods
-
     def greedy_action(self, actions: dict, action_t: Action) -> Action:
         """Chooses the action with the highest value.
 
