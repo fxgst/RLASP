@@ -110,10 +110,10 @@ class BlocksWorld:
         facts = []
 
         # add dynmaic rules
-        facts.append(('base', ''.join([part_state.clingoString() for part_state in state.locations])))
+        facts.append(('base', ''.join([part_state.clingo_string() for part_state in state.locations])))
         facts.append(('base', f'#const t = {t}.'))
         if action:
-            facts.append(('base', action.clingoString()))
+            facts.append(('base', action.clingo_string()))
 
         # add static main program file
         self.clingo.add_file('blocksworld-mdp.lp')

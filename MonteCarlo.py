@@ -93,11 +93,6 @@ class MonteCarlo:
                 state_t = episode[t][0]
                 action_t = episode[t][2]
 
-                # return ratio for benchmarking
-                if t == 0:
-                    return_ratio = self.calculate_return_ratio(start_state, g_return, self.max_episode_length + 1)  # clingo IO
-                    self.return_ratios.append(return_ratio)
-
                 is_first_visit = True
                 for before_t in range(0, t):
                     if episode[before_t][0] == state_t and episode[before_t][2] == action_t:
@@ -170,14 +165,3 @@ class MonteCarlo:
         """
         (_, _, bestAction, _, _) = self.blocks_world.next_step(state, None, t=planning_horizon)  # clingo IO
         return bestAction
-
-    def calculate_return_ratio(self, start_state: State, episode_reward: float, minimal_reward: float) -> float:
-        """Calculates the return ratio of an episode.
-
-        :param start_state: the initial state
-        :param episode_reward: the actual reward achieved during that episode
-        :param minimal_reward: the minimal reward the agent can achieve during an episode
-        :return: the return ratio
-        """
-        (_, _, _, _, maxReward) = self.blocks_world.next_step(start_state, None, 2 * (len(start_state.locations) - 1))  # clingo IO
-        return (episode_reward + abs(minimal_reward)) / (maxReward + abs(minimal_reward))

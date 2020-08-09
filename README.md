@@ -1,4 +1,4 @@
-# BlocksWorld
+# RLASP
 This program combines reinforcement learning (RL) with answer set programming (ASP) to evaluate policies for solving blocks world problems.
 The technique used for reinforcement learning is a first-visit Exploring Starts Monte Carlo policy evaluation method.
 For the ASP parts, like executing actions and determining the current state of the environment, `clingo` by [Potassco, the Potsdam Answer Set Solving Collection][potassco] is used.
