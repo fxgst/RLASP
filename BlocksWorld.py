@@ -4,6 +4,8 @@ from entities import *
 import numpy as np
 import pickle
 
+state_enumeration_limit = 9  # blocks worlds bigger than this don't try to enumerate all possible states
+
 
 class BlocksWorld:
     def __init__(self, path=None):
@@ -13,10 +15,10 @@ class BlocksWorld:
         """
         self.clingo = ClingoBridge()
         self.blocks = self.get_blocks()
-        if path and len(self.blocks) < 10:
+        if path and len(self.blocks) <= state_enumeration_limit:
             with open(path, 'rb') as f:
                 self.allStates = pickle.load(f)
-        elif len(self.blocks) < 10:
+        elif len(self.blocks) <= state_enumeration_limit:
             self.allStates = self.generate_all_states()
 
     def get_random_start_state(self) -> State:
@@ -24,7 +26,7 @@ class BlocksWorld:
 
         :return: a random state
         """
-        if len(self.blocks) < 10:
+        if len(self.blocks) <= state_enumeration_limit:
             rnd = random.randint(0, len(self.allStates) - 1)
             return self.allStates[rnd]
         else:

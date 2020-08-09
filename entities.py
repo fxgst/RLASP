@@ -9,7 +9,7 @@ class PartState:
         return self.id == other.id
 
     def clingoString(self):
-        return f'previous({self.id}). '
+        return f'current({self.id}). '
 
     def __hash__(self):
         return hash(id)

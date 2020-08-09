@@ -4,7 +4,7 @@ import statistics
 from MonteCarlo import *
 from testparms import *
 
-test_name = str(num_blocks) + 'b_' + str(number_episodes) + 'e' + '_' + str(number_runs + 10) + 'r' + '_' + str(planning_factor) + 'pf' + ('_poep' if plan_on_empty_policy else '') + (f'_{planning_horizon}phz' if (planning_factor != 0 or plan_on_empty_policy) else '')
+test_name = str(num_blocks) + 'b_' + str(number_episodes) + 'e' + '_' + str(number_runs) + 'r' + '_' + str(planning_factor) + 'pf' + ('_poep' if plan_on_empty_policy else '') + (f'_{planning_horizon}phz' if (planning_factor != 0 or plan_on_empty_policy) else '')
 plot_every_n = int(number_episodes / plot_points)
 test_data_path = './testdata/'
 
@@ -54,7 +54,7 @@ def load_plot_data(filename):
 
 
 def cache_blocks_world(blocks_world, number_of_blocks):
-    if number_of_blocks < 10:
+    if number_of_blocks < 11:
         with open(test_data_path + str(number_of_blocks) + '_blocksworld.pkl', 'wb') as f:
             pickle.dump(blocks_world.allStates, f)
 

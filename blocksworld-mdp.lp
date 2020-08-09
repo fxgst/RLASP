@@ -1,7 +1,7 @@
 % MDP specification for the blocks world
 
 % input predicates ********************************************************************************
-% previous(X) ...	X is a term representation of a state predicate, provided by BlocksWorld.py, optional
+% current(X) ...	X is a term representation of a state predicate, provided by BlocksWorld.py, optional
 % action(X) ...  	X is term representation of an action that has been chosen, provided by BlocksWorld.py, optional
 % subgoal(X,Y) ... 	X is on top of Y in goal state
 % constant t representing the planning horizon
@@ -15,7 +15,7 @@ subgoal(a, table). subgoal(b, a). subgoal(c, b). subgoal(d, c).% subgoal(e, d). 
 executable(move(X,Y)) :- executable(X,Y,1), t > 0.
 executable(move(X,Y)) :- executable(X,Y,0), t = 0.
 
-on(X,Y,0) :- previous(on(X,Y)).
+on(X,Y,0) :- current(on(X,Y)).
 move(X,Y,0) :- action(move(X,Y)).
 
 % state(X) ... X is a term representation of a state predicate that holds in the follow-up state
@@ -32,7 +32,7 @@ time(0..t).
 
 goal(T) :- time(T), { not on(X,Y,T) : subgoal(X,Y) } = 0.    
  
-% rewards depending on the previous state, the chosen action, and the follow-up state
+% rewards depending on the current state, the chosen action, and the follow-up state
 reward(100,T) :- goal(T), not goal(T-1).        % big reward for reaching the goal the first time
 reward(-1,T)  :- move(_,_,T-1).                 % small penalty for each move
 

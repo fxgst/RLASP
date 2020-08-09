@@ -95,7 +95,7 @@ class MonteCarlo:
 
                 # return ratio for benchmarking
                 if t == 0:
-                    return_ratio = self.calculate_return_ratio(start_state, g_return, -(self.max_episode_length + 1))  # clingo IO
+                    return_ratio = self.calculate_return_ratio(start_state, g_return, self.max_episode_length + 1)  # clingo IO
                     self.return_ratios.append(return_ratio)
 
                 is_first_visit = True
@@ -180,4 +180,4 @@ class MonteCarlo:
         :return: the return ratio
         """
         (_, _, _, _, maxReward) = self.blocks_world.next_step(start_state, None, 2 * (len(start_state.locations) - 1))  # clingo IO
-        return (episode_reward - minimal_reward) / (maxReward - minimal_reward)
+        return (episode_reward + abs(minimal_reward)) / (maxReward + abs(minimal_reward))
