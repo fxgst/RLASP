@@ -126,11 +126,9 @@ class MonteCarlo:
         :return: the action with highest value, ties broken arbitrarily
         """
         best_action = action_t
-        arg_max = -100000
+        arg_max = -100000000
         for action, value in actions:
-            if value == arg_max and randint(0, 1) == 1:
-                best_action = action
-            elif value > arg_max:
+            if value > arg_max:
                 arg_max = value
                 best_action = action
 

@@ -8,17 +8,10 @@ state_enumeration_limit = 9  # blocks worlds bigger than this don't try to enume
 
 
 class BlocksWorld:
-    def __init__(self, path=None):
-        """Initialize a blocks world, load pickle with blocks world states from path optionally.
-
-        :param path: optional path to pickle with blocks world states
-        """
+    def __init__(self):
         self.clingo = ClingoBridge()
         self.blocks = self.get_blocks()
-        if path and len(self.blocks) <= state_enumeration_limit:
-            with open(path, 'rb') as f:
-                self.allStates = pickle.load(f)
-        elif len(self.blocks) <= state_enumeration_limit:
+        if len(self.blocks) <= state_enumeration_limit:
             self.allStates = self.generate_all_states()
 
     def get_random_start_state(self) -> State:
