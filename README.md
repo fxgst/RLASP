@@ -8,11 +8,11 @@ ASP is also used to generate plans for accelerating the learning process.
 Run `main.py` with `python3`. Note that this program requires the `clingo` and `numpy` modules.
 You may want to use a `conda` [environment][conda].
 A guide on how to install the `clingo` Python API can be found [here][clingo_python_api].
-Hyperparameters can be set in `main.py`, specifically at the `mc` variable.
+Learning parameters can be set in `main.py`, specifically at the `mc` variable.
 You can add as many blocks and define the goal state as you wish in `*.lp`, but performance might decrease as more blocks are used.
 
 ## Reference
-To read the full reference and theoretical backgrounds, take a look at and download the [thesis][thesis].
+To read the full reference and theoretical backgrounds, take a look at the [thesis][thesis].
 
 [potassco]: https://potassco.org
 [clingo_python_api]: https://potassco.org/clingo/#packages

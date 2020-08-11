@@ -28,7 +28,7 @@ class ClingoBridge:
         :param programs: a list of atoms or ASP programs
         :param n: number of answer sets to generate, 0 calculates all answer sets
         """
-        self.ctl.configuration.solve.models = n  # create all stable models
+        self.ctl.configuration.solve.models = n
         files = []
 
         # add programs to list of files for ASP program

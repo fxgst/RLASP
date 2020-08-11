@@ -2,7 +2,6 @@ from ClingoBridge import *
 import random
 from entities import *
 import numpy as np
-import pickle
 
 state_enumeration_limit = 9  # blocks worlds bigger than this don't try to enumerate all possible states
 
@@ -90,13 +89,13 @@ class BlocksWorld:
 
         return blocks
 
-    def next_step(self, state: State, action: Action, t: int):
+    def next_step(self, state: State, action: Action, horizon: int):
         """Perform one step using the ASP, return new state, new available actions, best possible action,
         reward and maximum reward (for calculating the return ratio).
 
         :param state: the current state
         :param action: the action to be performed
-        :param t: operation mode/planning horizon (see thesis)
+        :param horizon: episode state/planning horizon
         :return: new state, new available actions, best possible action, reward and maximum reward
         """
         self.clingo = ClingoBridge()  # reset clingo
@@ -104,7 +103,7 @@ class BlocksWorld:
 
         # add dynmaic rules
         facts.append(('base', ''.join([part_state.clingo_string() for part_state in state.locations])))
-        facts.append(('base', f'#const t = {t}.'))
+        facts.append(('base', f'#const horizon = {horizon}.'))
         if action:
             facts.append(('base', action.clingo_string()))
 

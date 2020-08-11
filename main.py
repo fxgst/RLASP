@@ -7,4 +7,4 @@ learned_policy = mc.learn_policy(gamma=1, number_episodes=150)  # {state : actio
 print(f'Learned policy: {learned_policy}')
 print()
 
-test_policy(learned_policy, blocks_world, 8)
+test_policy(learned_policy, blocks_world, max_episode_length=8)

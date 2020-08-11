@@ -33,7 +33,7 @@ class MonteCarlo:
         :param policy: the current policy
         :return: a sequence of state, reward, action
         """
-        episode = deque()  # deque allows faster appending than array
+        episode = deque()
         actions = self.get_initial_actions(state)  # clingo IO
 
         count = 0
@@ -62,7 +62,7 @@ class MonteCarlo:
                 # goal reached
                 break
 
-            (nextState, nextActions, _, nextReward, _) = self.blocks_world.next_step(state, action, t=1)  # clingo IO
+            (nextState, nextActions, _, nextReward, _) = self.blocks_world.next_step(state, action, horizon=1)  # clingo IO
             episode.append((state, nextReward, action))
             state = nextState
             actions = nextActions
@@ -71,20 +71,20 @@ class MonteCarlo:
         return episode
 
     def learn_policy(self, gamma: float, number_episodes: int) -> dict:
-        """Uses a first-visit Exploring Starts Monte Carlo evaluation method to evaluate policy P.
+        """Uses a first-visit Exploring Starts Monte Carlo method to approximate pi_*.
 
         :param gamma: the discounting factor (use only when no planning is used; set to 1 if planning is used)
         :param number_episodes: the number of episodes to run
         :return: the learned policy as a state-action mapping
         """
 
-        Visits = dict()  # {state : {action : number of experiences}}
-        P = dict()  # {state : action}
+        visits = dict()  # {state : {action : number of experiences}}
+        policy = dict()  # {state : action}
 
         print('Learning...')
         for _ in range(0, number_episodes):
             start_state = self.blocks_world.get_random_start_state()
-            episode = self.generate_episode(start_state, P)  # clingo IO
+            episode = self.generate_episode(start_state, policy)  # clingo IO
 
             g_return = 0
             for t in range(len(episode) - 1, 0 - 1, -1):
@@ -102,21 +102,21 @@ class MonteCarlo:
                 if is_first_visit:
                     if state_t not in self.Q:
                         self.Q[state_t] = dict()
-                        Visits[state_t] = dict()
+                        visits[state_t] = dict()
                         # initialize all possible actions in state_t with zero
                         for a in self.get_initial_actions(state_t):  # clingo IO
-                            Visits[state_t][a] = 0
+                            visits[state_t][a] = 0
                             self.Q[state_t][a] = 0
 
                     # predict/evaluate: calculate average value for state-action pair
-                    Visits[state_t][action_t] += 1
-                    self.Q[state_t][action_t] += (g_return - self.Q[state_t][action_t]) / Visits[state_t][action_t]
+                    visits[state_t][action_t] += 1
+                    self.Q[state_t][action_t] += (g_return - self.Q[state_t][action_t]) / visits[state_t][action_t]
 
                     # control/improve: use greedy exploration: choose action with highest return
-                    P[state_t] = self.greedy_action(self.Q[state_t].items(), action_t)
+                    policy[state_t] = self.greedy_action(self.Q[state_t].items(), action_t)
 
         print('Done!')
-        return P
+        return policy
 
     def greedy_action(self, actions: dict, action_t: Action) -> Action:
         """Chooses the action with the highest value.
@@ -140,7 +140,7 @@ class MonteCarlo:
         :param state: the current state
         :return: a list of applicable actions in that state
         """
-        (_, availableActions, _, _, _) = self.blocks_world.next_step(state, None, t=0)  # clingo IO
+        (_, availableActions, _, _, _) = self.blocks_world.next_step(state, None, horizon=0)  # clingo IO
         return availableActions
 
     def get_random_action(self, actions: list) -> Action:
@@ -161,5 +161,5 @@ class MonteCarlo:
         :param planning_horizon: how many steps to plan ahead
         :return: an action recommended by the planning component
         """
-        (_, _, bestAction, _, _) = self.blocks_world.next_step(state, None, t=planning_horizon)  # clingo IO
+        (_, _, bestAction, _, _) = self.blocks_world.next_step(state, None, horizon=planning_horizon)  # clingo IO
         return bestAction
