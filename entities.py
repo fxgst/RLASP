@@ -1,6 +1,6 @@
 class PartState:
-    def __init__(self, id: str):
-        self.id = id.replace(' ', '')
+    def __init__(self, name: str):
+        self.id = name.replace(' ', '')
 
     def __repr__(self):
         return self.id
@@ -12,7 +12,7 @@ class PartState:
         return f'current({self.id}). '
 
     def __hash__(self):
-        return hash(id)
+        return hash(self.id)
 
 
 class Action:
@@ -44,10 +44,10 @@ class State:
     def __eq__(self, other):
         if type(self) != type(other):
             return False
-        return set([str(a) for a in self.locations]) == set([str(a) for a in other.locations])
+        return set([str(location) for location in self.locations]) == set([str(location) for location in other.locations])
 
     def clingo_string(self):
         return ''.join([location.clingo_string() for location in self.locations])
 
     def __hash__(self):
-        return hash(frozenset([str(a) for a in self.locations]))
+        return hash(frozenset([str(location) for location in self.locations]))

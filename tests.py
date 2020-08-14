@@ -4,8 +4,8 @@ from MonteCarlo import *
 def test_policy(policy, blocks_world, max_episode_length):
     """Test whether the goal state can be reached from each starting state for a given policy.
     For each state, a check will be printed if the goal state was reachable from that state, a cross otherwise.
-    Note that this test is tailored for a blocks world of size 4, if other blocks worlds should be tested,
-    the final_state and final_action fields have to be updated accordingly.
+    Note that this test is tailored for a blocks world of size 4.
+    IMPORTANT: If other blocks worlds are be tested, the final_state and final_action fields have to be updated accordingly.
 
     :param policy: the policy to be evaluated
     :param blocks_world: a blocks world
